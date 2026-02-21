@@ -1,0 +1,18 @@
+HOW TO CREATE .env FILE - SIMPLE STEPS:
+
+1. In your project folder (e:\trywebsite), right-click on empty space
+2. Select "New" → "Text Document"
+3. Name it: .env (exactly like this - with the dot at the start)
+4. Open the file
+5. Copy and paste these 3 lines:
+
+PORT=5000
+MONGODB_URI=mongodb+srv://noor03012066_db_user:Gq5UBmH3csVyrq9B@hub-page.pwsvrbh.mongodb.net/codelearnhub?retryWrites=true&w=majority
+JWT_SECRET=code-learn-hub-secret-key-2024
+
+6. Save the file
+7. Close it
+
+IMPORTANT: The file must be named exactly ".env" (not ".env.txt")
+
+
