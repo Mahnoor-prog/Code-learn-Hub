@@ -4,7 +4,7 @@ import User from './models/User.js';
 import Module from './models/Module.js';
 import Badge from './models/Badge.js';
 
-dotenv.config();
+dotenv.config({ path: './server/.env' });
 
 const modules = [
   {
@@ -83,14 +83,45 @@ const modules = [
     ]
   },
   {
+    title: 'Python Intermediate',
+    language: 'Python',
+    difficulty: 'Intermediate',
+    icon: '🐍',
+    description: 'Dive deeper into Python with OOP, file handling, and modules.',
+    totalLessons: 18,
+    lessons: [
+      { title: 'Object Oriented Programming', content: 'Learn classes, objects, inheritance and polymorphism in Python.', order: 1 },
+      { title: 'File Handling', content: 'Read and write files using Python built-in functions.', order: 2 }
+    ],
+    quiz: [
+      {
+        question: 'Which keyword is used to create a class in Python?',
+        options: ['class', 'object', 'def', 'type'],
+        correctAnswer: 0,
+        explanation: 'The class keyword is used to define a class in Python.',
+        order: 1
+      }
+    ]
+  },
+  {
     title: 'Python Advanced',
     language: 'Python',
     difficulty: 'Advanced',
     icon: '🐍',
+    description: 'Master advanced Python concepts including decorators, generators, and async programming.',
     totalLessons: 20,
     lessons: [
-      { title: 'Advanced OOP', content: 'Object-oriented programming', order: 1 },
-      { title: 'Decorators', content: 'Python decorators', order: 2 }
+      { title: 'Decorators', content: 'Python decorators allow you to modify the behavior of functions.', order: 1 },
+      { title: 'Generators', content: 'Generators are functions that return an iterator.', order: 2 }
+    ],
+    quiz: [
+      {
+        question: 'What symbol is used to apply a decorator in Python?',
+        options: ['#', '@', '$', '&'],
+        correctAnswer: 1,
+        explanation: 'The @ symbol is used to apply a decorator to a function in Python.',
+        order: 1
+      }
     ]
   },
   {
@@ -128,32 +159,11 @@ const modules = [
         order: 1
       },
       {
-        question: 'What is the correct way to declare a variable in C++?',
-        options: ['variable x = 5;', 'var x = 5;', 'int x = 5;', 'x = 5;'],
-        correctAnswer: 2,
-        explanation: 'In C++, you must specify the data type when declaring a variable, e.g., int x = 5;',
-        order: 2
-      },
-      {
-        question: 'What does the "using namespace std;" statement do?',
-        options: ['Imports a library', 'Allows use of standard library without std:: prefix', 'Defines a new namespace', 'Declares a variable'],
-        correctAnswer: 1,
-        explanation: 'It allows you to use standard library functions and objects without the std:: prefix.',
-        order: 3
-      },
-      {
         question: 'What is the entry point of a C++ program?',
         options: ['start()', 'main()', 'begin()', 'init()'],
         correctAnswer: 1,
         explanation: 'Every C++ program must have a main() function as its entry point.',
-        order: 4
-      },
-      {
-        question: 'What operator is used for output in C++?',
-        options: ['print', 'cout', 'output', 'display'],
-        correctAnswer: 1,
-        explanation: 'cout (console output) is used with the << operator to output data in C++.',
-        order: 5
+        order: 2
       }
     ]
   },
@@ -162,9 +172,40 @@ const modules = [
     language: 'C++',
     difficulty: 'Intermediate',
     icon: '⚙️',
+    description: 'Master OOP concepts in C++ including classes, inheritance, and polymorphism.',
     totalLessons: 22,
     lessons: [
-      { title: 'Classes and Objects', content: 'OOP in C++', order: 1 }
+      { title: 'Classes and Objects', content: 'Learn how to create and use classes and objects in C++.', order: 1 },
+      { title: 'Inheritance', content: 'Inheritance allows a class to inherit properties from another class.', order: 2 }
+    ],
+    quiz: [
+      {
+        question: 'Which access specifier allows access from anywhere?',
+        options: ['private', 'protected', 'public', 'internal'],
+        correctAnswer: 2,
+        explanation: 'Public members are accessible from anywhere in the program.',
+        order: 1
+      }
+    ]
+  },
+  {
+    title: 'C++ Advanced',
+    language: 'C++',
+    difficulty: 'Advanced',
+    icon: '⚙️',
+    description: 'Advanced C++ including templates, STL, and memory management.',
+    totalLessons: 25,
+    lessons: [
+      { title: 'Templates', content: 'Templates allow you to write generic code in C++.', order: 1 }
+    ],
+    quiz: [
+      {
+        question: 'What keyword is used to define a template in C++?',
+        options: ['generic', 'template', 'type', 'class'],
+        correctAnswer: 1,
+        explanation: 'The template keyword is used to define a template in C++.',
+        order: 1
+      }
     ]
   },
   {
@@ -172,9 +213,19 @@ const modules = [
     language: 'C#',
     difficulty: 'Beginner',
     icon: '🔷',
+    description: 'Learn C# basics including syntax, data types, and control structures.',
     totalLessons: 16,
     lessons: [
-      { title: 'C# Basics', content: 'Introduction to C#', videoUrl: 'https://www.youtube.com/embed/GhQdlIFylQ8', order: 1 }
+      { title: 'C# Basics', content: 'Introduction to C# programming language and .NET framework.', videoUrl: 'https://www.youtube.com/embed/GhQdlIFylQ8', order: 1 }
+    ],
+    quiz: [
+      {
+        question: 'What is the file extension for C# files?',
+        options: ['.java', '.cpp', '.cs', '.py'],
+        correctAnswer: 2,
+        explanation: 'C# files use the .cs file extension.',
+        order: 1
+      }
     ]
   },
   {
@@ -182,9 +233,19 @@ const modules = [
     language: 'C#',
     difficulty: 'Intermediate',
     icon: '🔷',
+    description: 'Build real applications using C# and the .NET framework.',
     totalLessons: 25,
     lessons: [
-      { title: '.NET Framework', content: 'Building .NET apps', videoUrl: 'https://www.youtube.com/embed/C5cnZ-gMpbo', order: 1 }
+      { title: '.NET Framework', content: 'Building .NET applications with C#.', videoUrl: 'https://www.youtube.com/embed/C5cnZ-gMpbo', order: 1 }
+    ],
+    quiz: [
+      {
+        question: 'What does LINQ stand for?',
+        options: ['Language Integrated Query', 'Linear Query', 'Linked Query', 'List Query'],
+        correctAnswer: 0,
+        explanation: 'LINQ stands for Language Integrated Query, a feature of C# for querying data.',
+        order: 1
+      }
     ]
   },
   {
@@ -192,9 +253,19 @@ const modules = [
     language: 'Java',
     difficulty: 'Beginner',
     icon: '☕',
+    description: 'Learn Java fundamentals including OOP concepts and basic syntax.',
     totalLessons: 14,
     lessons: [
-      { title: 'Java Introduction', content: 'Getting started', videoUrl: 'https://www.youtube.com/embed/eIrMbAQW0pE', order: 1 }
+      { title: 'Java Introduction', content: 'Getting started with Java programming.', videoUrl: 'https://www.youtube.com/embed/eIrMbAQW0pE', order: 1 }
+    ],
+    quiz: [
+      {
+        question: 'What is the main method signature in Java?',
+        options: ['public void main()', 'public static void main(String[] args)', 'static main()', 'void main(String args)'],
+        correctAnswer: 1,
+        explanation: 'The correct main method signature in Java is public static void main(String[] args).',
+        order: 1
+      }
     ]
   },
   {
@@ -202,9 +273,19 @@ const modules = [
     language: 'Java',
     difficulty: 'Advanced',
     icon: '☕',
+    description: 'Build enterprise applications using the Java Spring Framework.',
     totalLessons: 28,
     lessons: [
-      { title: 'Spring Basics', content: 'Spring framework intro', videoUrl: 'https://www.youtube.com/embed/If1Lw4pL0d4', order: 1 }
+      { title: 'Spring Basics', content: 'Introduction to the Spring framework for Java.', videoUrl: 'https://www.youtube.com/embed/If1Lw4pL0d4', order: 1 }
+    ],
+    quiz: [
+      {
+        question: 'What annotation marks a class as a Spring component?',
+        options: ['@Bean', '@Component', '@Service', '@Controller'],
+        correctAnswer: 1,
+        explanation: '@Component marks a class as a Spring-managed component.',
+        order: 1
+      }
     ]
   },
   {
@@ -221,16 +302,16 @@ const modules = [
         videoUrl: 'https://www.youtube.com/embed/SqcY0GlETPk',
         examples: [
           'import React from "react";\n\nfunction App() {\n  return <h1>Hello, React!</h1>;\n}',
-          '// JSX allows you to write HTML-like syntax in JavaScript\nconst element = <div>Welcome to React</div>;'
+          'const element = <div>Welcome to React</div>;'
         ],
         order: 1
       },
       {
-        title: 'Components',
-        content: 'Components are reusable pieces of UI. They can be functional (using functions) or class-based (using classes).',
+        title: 'Components and Props',
+        content: 'Components are reusable pieces of UI. Props are used to pass data between components.',
         examples: [
           'function Welcome({ name }) {\n  return <h1>Hello, {name}!</h1>;\n}',
-          '// Using the component\n<Welcome name="Developer" />'
+          '<Welcome name="Developer" />'
         ],
         order: 2
       }
@@ -249,27 +330,6 @@ const modules = [
         correctAnswer: 1,
         explanation: 'useState is the hook used to add state to functional components in React.',
         order: 2
-      },
-      {
-        question: 'How do you pass data to a component?',
-        options: ['Using state', 'Using props', 'Using context', 'Using refs'],
-        correctAnswer: 1,
-        explanation: 'Props (short for properties) are used to pass data from parent components to child components.',
-        order: 3
-      },
-      {
-        question: 'What does useEffect hook do?',
-        options: ['Manages component state', 'Handles side effects', 'Creates new components', 'Imports modules'],
-        correctAnswer: 1,
-        explanation: 'useEffect is used to perform side effects in functional components, such as data fetching or DOM manipulation.',
-        order: 4
-      },
-      {
-        question: 'What is the virtual DOM?',
-        options: ['A real DOM element', 'A JavaScript representation of the DOM', 'A CSS framework', 'A database'],
-        correctAnswer: 1,
-        explanation: 'The virtual DOM is a JavaScript representation of the real DOM that React uses to optimize updates.',
-        order: 5
       }
     ]
   },
@@ -278,9 +338,20 @@ const modules = [
     language: 'React',
     difficulty: 'Advanced',
     icon: '⚛️',
+    description: 'Master advanced React patterns including custom hooks, context, and performance optimization.',
     totalLessons: 24,
     lessons: [
-      { title: 'Advanced Hooks', content: 'Custom hooks', order: 1 }
+      { title: 'Custom Hooks', content: 'Custom hooks allow you to extract and reuse stateful logic.', order: 1 },
+      { title: 'Context API', content: 'Context provides a way to pass data through the component tree without props.', order: 2 }
+    ],
+    quiz: [
+      {
+        question: 'What must a custom hook name start with?',
+        options: ['get', 'use', 'hook', 'custom'],
+        correctAnswer: 1,
+        explanation: 'Custom hooks must start with "use" to follow React conventions.',
+        order: 1
+      }
     ]
   }
 ];
@@ -325,29 +396,25 @@ const badges = [
 
 async function seed() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/codelearnhub');
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ Connected to MongoDB');
 
-    // Clear existing data
     await Module.deleteMany({});
     await Badge.deleteMany({});
     console.log('✅ Cleared existing data');
 
-    // Insert modules
     await Module.insertMany(modules);
     console.log(`✅ Inserted ${modules.length} modules`);
 
-    // Insert badges
     await Badge.insertMany(badges);
     console.log(`✅ Inserted ${badges.length} badges`);
 
-    // Create default user
     const existingUser = await User.findOne({ email: 'test@example.com' });
     if (!existingUser) {
       const user = new User({
         name: 'Test Student',
         email: 'test@example.com',
-        password: 'password123', // Will be hashed by pre-save hook
+        password: 'password123',
         role: 'student',
         points: 100,
         level: 2
@@ -367,5 +434,3 @@ async function seed() {
 }
 
 seed();
-
-

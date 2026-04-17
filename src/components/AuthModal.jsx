@@ -13,7 +13,6 @@ const AuthModal = ({ isOpen, onClose }) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       let result;
       if (isLogin) {
@@ -21,7 +20,6 @@ const AuthModal = ({ isOpen, onClose }) => {
       } else {
         result = await register(formData.name, formData.email, formData.password);
       }
-
       if (result.success) {
         onClose();
         setFormData({ name: '', email: '', password: '' });
@@ -39,105 +37,102 @@ const AuthModal = ({ isOpen, onClose }) => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+      <div
+        style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000,
+        }}
+      >
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
-          className="glass rounded-custom p-8 border border-white/20 w-full max-w-md"
+          style={{
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            borderRadius: '16px',
+            padding: '32px',
+            width: '100%',
+            maxWidth: '440px',
+            backdropFilter: 'blur(20px)',
+          }}
         >
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-primary to-neon-purple bg-clip-text text-transparent">
-              {isLogin ? 'Login' : 'Sign Up'}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', background: 'linear-gradient(to right, #6366f1, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              {isLogin ? 'Welcome Back' : 'Create Account'}
             </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-white text-2xl"
-            >
-              ×
-            </button>
+            <button onClick={onClose} style={{ color: '#9ca3af', fontSize: '28px', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
           </div>
 
-          <div className="flex gap-2 mb-6">
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
             <button
-              onClick={() => {
-                setIsLogin(true);
-                setError('');
-                setFormData({ name: '', email: '', password: '' });
+              onClick={() => { setIsLogin(true); setError(''); setFormData({ name: '', email: '', password: '' }); }}
+              style={{
+                flex: 1, padding: '8px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', border: 'none',
+                background: isLogin ? 'linear-gradient(to right, #6366f1, #a855f7)' : 'transparent',
+                color: isLogin ? 'white' : '#9ca3af',
+                border: isLogin ? 'none' : '1px solid rgba(255,255,255,0.2)',
               }}
-              className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
-                isLogin
-                  ? 'bg-gradient-to-r from-indigo-primary to-neon-purple'
-                  : 'glass border border-white/20'
-              }`}
             >
               Login
             </button>
             <button
-              onClick={() => {
-                setIsLogin(false);
-                setError('');
-                setFormData({ name: '', email: '', password: '' });
+              onClick={() => { setIsLogin(false); setError(''); setFormData({ name: '', email: '', password: '' }); }}
+              style={{
+                flex: 1, padding: '8px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer',
+                background: !isLogin ? 'linear-gradient(to right, #6366f1, #a855f7)' : 'transparent',
+                color: !isLogin ? 'white' : '#9ca3af',
+                border: !isLogin ? 'none' : '1px solid rgba(255,255,255,0.2)',
               }}
-              className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
-                !isLogin
-                  ? 'bg-gradient-to-r from-indigo-primary to-neon-purple'
-                  : 'glass border border-white/20'
-              }`}
             >
               Sign Up
             </button>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-300 text-sm">
+            <div style={{ marginBottom: '16px', padding: '12px', background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.5)', borderRadius: '8px', color: '#fca5a5', fontSize: '14px' }}>
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit}>
             {!isLogin && (
-              <div>
-                <label className="block text-sm font-semibold mb-2 text-gray-300">
-                  Name
-                </label>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#d1d5db' }}>Full Name</label>
                 <input
                   type="text"
                   required={!isLogin}
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-dark-blue-gray border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-glow transition-all"
-                  placeholder="Enter your name"
+                  placeholder="Enter your full name"
+                  style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', padding: '12px 16px', color: 'white', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
                 />
               </div>
             )}
 
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-gray-300">
-                Email
-              </label>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#d1d5db' }}>Email</label>
               <input
                 type="email"
                 required
+                autoComplete="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full bg-dark-blue-gray border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-glow transition-all"
                 placeholder="Enter your email"
+                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', padding: '12px 16px', color: 'white', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-gray-300">
-                Password
-              </label>
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#d1d5db' }}>Password</label>
               <input
                 type="password"
                 required
+                autoComplete={isLogin ? 'current-password' : 'new-password'}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full bg-dark-blue-gray border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-glow transition-all"
-                placeholder="Enter your password"
+                placeholder="Enter your password (min 6 characters)"
                 minLength={6}
+                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', padding: '12px 16px', color: 'white', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
 
@@ -146,10 +141,21 @@ const AuthModal = ({ isOpen, onClose }) => {
               disabled={loading}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full py-3 bg-gradient-to-r from-indigo-primary to-neon-purple rounded-lg font-semibold shadow-glow-purple hover:shadow-glow-cyan transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ width: '100%', padding: '12px', background: 'linear-gradient(to right, #6366f1, #a855f7)', border: 'none', borderRadius: '8px', color: 'white', fontWeight: '600', fontSize: '16px', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1 }}
             >
-              {loading ? 'Loading...' : isLogin ? 'Login' : 'Sign Up'}
+              {loading ? 'Please wait...' : isLogin ? 'Login' : 'Create Account'}
             </motion.button>
+
+            <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: '14px', marginTop: '16px' }}>
+              {isLogin ? "Don't have an account? " : "Already have an account? "}
+              <button
+                type="button"
+                onClick={() => { setIsLogin(!isLogin); setError(''); setFormData({ name: '', email: '', password: '' }); }}
+                style={{ color: '#22d3ee', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '600' }}
+              >
+                {isLogin ? 'Sign Up' : 'Login'}
+              </button>
+            </p>
           </form>
         </motion.div>
       </div>
@@ -158,4 +164,3 @@ const AuthModal = ({ isOpen, onClose }) => {
 };
 
 export default AuthModal;
-
