@@ -1,17 +1,18 @@
 # Code Learn Hub - Full Stack AI Learning Platform
 
-A modern, highly-advanced AI-powered coding education platform built with React, Node.js, Express, MongoDB, and Firebase.
+A modern, AI-powered coding education platform built with React, Node.js, Express, MongoDB, and Firebase.
 
-## 🚀 Key Features & Recent Updates
+## 🚀 Features
 
-- **🔥 Firebase Authentication**: Fully integrated Firebase Auth for secure, seamless registration and login, synced with MongoDB profiles.
-- **🤖 AI Error Helper (IDE)**: A custom Antigravity AI tutor embedded directly in the browser IDE. It diagnoses errors, provides code snippets, and suggests revision topics using an advanced OpenAI prompt.
-- **💻 Secure Code Execution**: A dedicated `execution-server` running Node.js to safely execute user-submitted Python, JS, C++, Java, and C# code.
-- **💳 Subscription & Lesson Locking**: Integrated user plans (`free`, `student`, `pro`). Free users are restricted to the first 3 lessons per module.
-- **🧠 Personalized Learning Paths**: AI-generated weekly roadmaps, performance reports, and dynamic lesson suggestions based on user progress.
-- **🏆 Advanced Gamification**: Real-time leaderboards, dynamic streak tracking, badges, and XP point accumulation.
-- **📚 Dynamic Content**: Modules and lessons generated dynamically via the OpenAI API.
-- **🎨 Modern UI/UX**: Polished interface with dynamic loading skeletons, glassmorphism design, and responsive mobile sidebars.
+- **5 Core Languages**: Python, C++, C#, Java, React
+- **🔥 Firebase Authentication**: Fully integrated Firebase Auth for secure registration and login, synced with MongoDB profiles.
+- **🤖 AI-Powered Learning & IDE**: Personalized content generation, an AI Error Helper embedded in the browser IDE, and chatbot assistance.
+- **💻 Secure Code Execution**: A dedicated sandboxed execution server running Node.js to safely execute user-submitted code.
+- **💳 Subscription & Lesson Locking**: Integrated user plans (`free`, `student`, `pro`) with lesson restriction logic.
+- **🧠 Personalized Learning Paths**: AI-generated weekly roadmaps, performance reports, and dynamic lesson suggestions.
+- **Progress Tracking**: Real-time progress tracking and analytics
+- **Gamification**: Badges, points, live leaderboards, streaks, and achievements
+- **Dashboard**: Comprehensive learning analytics
 
 ## 📋 Prerequisites
 
@@ -35,8 +36,8 @@ A modern, highly-advanced AI-powered coding education platform built with React,
    cd ../execution-server && npm install
    ```
 
-3. **Set up Environment Variables**
-   Create a `.env` in the root (for frontend):
+3. **Set up environment variables**
+   Create a `.env` file in the root directory (for frontend):
    ```env
    VITE_API_URL=http://localhost:5000/api
    VITE_FIREBASE_API_KEY="your-key"
@@ -47,20 +48,25 @@ A modern, highly-advanced AI-powered coding education platform built with React,
    VITE_FIREBASE_APP_ID="your-app-id"
    ```
 
-   Create a `server/.env` (for backend):
+   Create a `server/.env` file (for backend):
    ```env
    PORT=5000
    MONGODB_URI=mongodb+srv://...
    OPENAI_API_KEY=sk-...
+   JWT_SECRET=your-secret
    FIREBASE_PROJECT_ID=your-project-id
    DEV_BYPASS_AUTH=false
    ```
 
-4. **Start the development servers**
+4. **Start MongoDB**
+   - If using local MongoDB, make sure it's running
+   - Or use MongoDB Atlas and update `MONGODB_URI` in `.env`
+
+5. **Start the development servers**
    ```bash
    npm run dev
    ```
-   This `concurrently` starts:
+   This will start concurrently:
    - Backend API server on `http://localhost:5000`
    - Code Execution Sandbox on `http://localhost:3000`
    - Frontend Vite server on `http://localhost:5173`
@@ -68,38 +74,81 @@ A modern, highly-advanced AI-powered coding education platform built with React,
 ## 📁 Project Structure
 
 ```
-trywebsite/
-├── server/                 # Main Node/Express Backend
+code-learn-hub/
+├── server/                 # Backend Node/Express Server
 │   ├── firebaseAdmin.js   # Firebase Admin initialization
-│   ├── models/            # MongoDB schemas (User, Progress, etc)
-│   ├── routes/            # API routes (aicontent, auth, gamification)
-│   └── middleware/         # Auth verification middleware
+│   ├── models/            # MongoDB models
+│   ├── routes/            # API routes
+│   ├── middleware/         # Auth middleware
+│   ├── index.js           # Server entry point
+│   └── seed.js            # Database seeder
 ├── execution-server/       # Secure Sandbox Environment
 │   └── server.js          # Handles /execute requests
-├── src/                   # React Frontend
-│   ├── components/        # Reusable UI components
-│   ├── pages/            # Main views (IDE, Dashboard, LessonPage)
-│   ├── context/          # Auth & Personalization Context
-│   └── firebase.js       # Firebase client config
+├── src/                   # Frontend React Code
+│   ├── components/        # React components
+│   ├── pages/            # Page components
+│   ├── context/          # React context (Auth & Personalization)
+│   ├── firebase.js       # Firebase client config
+│   ├── utils/            # Utilities (API, dummyData)
+│   └── styles/           # CSS styles
 └── package.json
 ```
 
-## 🔌 Core API Endpoints
+## 🔌 API Endpoints
 
-### Authentication (Firebase Sync)
-- `POST /api/auth/register` - Sync Firebase user to MongoDB
-- `GET /api/auth/me` - Get current user profile and calculate streaks
+### Authentication (Firebase)
+- `POST /api/auth/register` - Register new user (Syncs Firebase to MongoDB)
+- `GET /api/auth/me` - Get current user profile & streak data
 
-### AI Content & Sandbox
+### Modules & Sandbox
+- `GET /api/modules` - Get all modules (with filters)
+- `GET /api/modules/:id` - Get single module
+- `POST /api/code/run` - Forwards to execution-server for code execution
 - `POST /api/aicontent/debug` - AI Error Helper analysis
-- `POST /api/code/run` - Forwards to execution-server for sandboxing
 
-### Personalization & Gamification
-- `GET /api/gamification/leaderboard` - Live user rankings
+### Progress & Dashboard
+- `GET /api/progress/module/:moduleId` - Get user progress for module
+- `POST /api/progress/module/:moduleId` - Update progress
+- `GET /api/dashboard/performance` - Get advanced dashboard stats
+
+### Chatbot
+- `GET /api/chatbot/history` - Get chat history
+- `POST /api/chatbot/message` - Send message
+
+### Gamification & Personalization
+- `GET /api/gamification/badges` - Get user badges
+- `GET /api/gamification/leaderboard` - Get live leaderboard
+- `POST /api/gamification/check-badges` - Check and award badges
 - `GET /api/personalization/roadmap` - AI-generated weekly study plan
-- `GET /api/dashboard/performance` - Advanced user analytics
+
+## 🎯 Usage
+
+1. **Register/Login**: Create an account or login
+2. **Browse Modules**: Explore modules for Python, C++, C#, Java, and React
+3. **Track Progress**: Your progress is automatically saved
+4. **Interactive IDE**: Practice coding and use the AI Error Helper when you get stuck
+5. **Use Chatbot**: Ask questions about coding concepts
+6. **Earn Badges**: Complete lessons to unlock achievements
+7. **View Dashboard**: See your learning statistics
+
+## 🛡️ Authentication
+
+The app uses Firebase Authentication. Users log in on the frontend to get an ID Token, which is passed in the `Authorization: Bearer <token>` header to the backend. The backend verifies this using the Firebase Admin SDK.
+
+## 📝 Notes
+
+- Progress is tracked automatically when lessons are completed
+- Badges and streaks are awarded automatically based on achievements
+- All API endpoints require authentication except registration/login/leaderboard
+
+## 🚀 Production Build
+
+```bash
+npm run build
+```
+
+The frontend will be built to the `dist` folder.
 
 ## 📄 License
+
 MIT
-
-
