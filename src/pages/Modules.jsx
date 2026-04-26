@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import ModuleCard from '../components/ModuleCard';
 import { modulesAPI } from '../utils/api';
 
@@ -22,9 +23,26 @@ const Modules = () => {
       const params = {};
       if (selectedLanguage !== 'All') params.language = selectedLanguage;
       if (selectedDifficulty !== 'All') params.difficulty = selectedDifficulty;
-      
+
       const response = await modulesAPI.getAll(params);
-      setModules(response.data);
+      let loadedModules = response.data;
+
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+          const progRes = await fetch(`${apiBaseUrl}/progress/all`, { headers: { 'Authorization': `Bearer ${token}` } });
+          if (progRes.ok) {
+            const progresses = await progRes.json();
+            loadedModules = loadedModules.map(mod => {
+              const prog = progresses.find(p => (p.moduleId?._id || p.moduleId) === mod._id);
+              return { ...mod, progress: prog ? prog.progressPercentage : 0 };
+            });
+          }
+        } catch (e) { console.error('Failed to fetch progress', e); }
+      }
+
+      setModules(loadedModules);
     } catch (error) {
       console.error('Failed to load modules:', error);
       // Fallback to empty array if API fails
@@ -34,7 +52,13 @@ const Modules = () => {
     }
   };
 
-  const filteredModules = modules;
+  const location = useLocation();
+  const filterEnrolled = location.state?.filterEnrolled;
+
+  const filteredModules = modules.filter(m => {
+    if (filterEnrolled && (!m.progress || m.progress <= 0)) return false;
+    return true;
+  });
 
   return (
     <div className="min-h-screen pt-20">
@@ -47,7 +71,7 @@ const Modules = () => {
         >
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
             <span className="bg-gradient-to-r from-indigo-primary to-neon-purple bg-clip-text text-transparent">
-              Learning Modules
+              {filterEnrolled ? "My Custom Modules" : "Learning Modules"}
             </span>
           </h1>
           <p className="text-xl text-gray-300">
@@ -70,11 +94,10 @@ const Modules = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setSelectedLanguage(lang)}
-                className={`px-6 py-2 rounded-custom font-semibold transition-all ${
-                  selectedLanguage === lang
-                    ? 'bg-gradient-to-r from-indigo-primary to-neon-purple shadow-glow-purple'
-                    : 'glass border border-white/20 hover:border-cyan-glow'
-                }`}
+                className={`px-6 py-2 rounded-custom font-semibold transition-all ${selectedLanguage === lang
+                  ? 'bg-gradient-to-r from-indigo-primary to-neon-purple shadow-glow-purple'
+                  : 'glass border border-white/20 hover:border-cyan-glow'
+                  }`}
               >
                 {lang}
               </motion.button>
@@ -95,11 +118,10 @@ const Modules = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setSelectedDifficulty(difficulty)}
-                className={`px-6 py-2 rounded-custom font-semibold transition-all ${
-                  selectedDifficulty === difficulty
-                    ? 'bg-gradient-to-r from-indigo-primary to-cyan-glow shadow-glow-cyan'
-                    : 'glass border border-white/20 hover:border-cyan-glow'
-                }`}
+                className={`px-6 py-2 rounded-custom font-semibold transition-all ${selectedDifficulty === difficulty
+                  ? 'bg-gradient-to-r from-indigo-primary to-cyan-glow shadow-glow-cyan'
+                  : 'glass border border-white/20 hover:border-cyan-glow'
+                  }`}
               >
                 {difficulty}
               </motion.button>

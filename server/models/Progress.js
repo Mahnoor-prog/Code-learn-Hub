@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const progressSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  moduleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Module' },
   language: { type: String, required: true },
   level: { type: Number, default: 1 },
   lessonsCompleted: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lesson' }],

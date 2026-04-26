@@ -26,7 +26,7 @@ const moduleSchema = new mongoose.Schema({
   lessons: [{
     title: String,
     content: String,
-    videoUrl: String, 
+    videoUrl: String,
     examples: [String],
     order: Number
   }],
@@ -39,7 +39,11 @@ const moduleSchema = new mongoose.Schema({
   }],
   totalLessons: {
     type: Number,
-    default: 0
+    default: 10
+  },
+  lessonCount: {
+    type: Number,
+    default: 10
   },
   estimatedHours: {
     type: Number,

@@ -4,6 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { dashboardAPI, progressAPI } from '../utils/api';
 import ProgressGraph from '../components/ProgressGraph';
+import { personalizationAPI } from '../utils/api';
+import RoadmapTimeline from '../components/personalization/RoadmapTimeline';
+import { getCachedValue, setCachedValue } from '../utils/personalizationCache';
+import { performanceAPI, weeklyReportsAPI } from '../utils/api';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -18,6 +22,17 @@ const Dashboard = () => {
   const [progressData, setProgressData] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [roadmap, setRoadmap] = useState(null);
+  const [roadmapLoading, setRoadmapLoading] = useState(false);
+  const [performanceSummary, setPerformanceSummary] = useState({
+    averageQuizScorePercentage: 0,
+    weakAreas: [],
+    strongAreas: [],
+    totalTimeSpentSeconds: 0,
+    currentStreak: 0
+  });
+  const [weeklyReport, setWeeklyReport] = useState(null);
+  const [weeklyHistory, setWeeklyHistory] = useState([]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -25,58 +40,111 @@ const Dashboard = () => {
         navigate('/');
       } else {
         loadDashboardData();
+        loadRoadmapData();
+        loadPerformanceAndReports();
       }
     }
   }, [user, authLoading]);
 
+  useEffect(() => {
+    if (!user) return;
+    const intervalId = setInterval(() => {
+      loadDashboardData();
+      loadPerformanceAndReports();
+    }, 30000);
+    return () => clearInterval(intervalId);
+  }, [user]);
+
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [dashboardResponse, progressResponse] = await Promise.all([
-        dashboardAPI.getStats().catch(() => ({ data: {} })),
-        progressAPI.getAllProgress().catch(() => ({ data: [] }))
+      const token = localStorage.getItem('token');
+      const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+      const headers = { 'Authorization': `Bearer ${token}` };
+
+      // Multi-fetch the core features
+      const [dashRes, activityRes] = await Promise.all([
+        fetch(`${apiBaseUrl}/dashboard/me`, { headers }).catch(() => ({ ok: false })),
+        fetch(`${apiBaseUrl}/activity/me`, { headers }).catch(() => ({ ok: false }))
       ]);
 
-      const dashboardData = dashboardResponse.data || {};
-      setStats({
-        activeModules: dashboardData.activeModules || 0,
-        completed: dashboardData.completedModules || 0,
-        streak: user.streak || 0,
-        totalPoints: user.points || 0
-      });
-
-      // Generate progress data from recent progress
-      const allProgress = progressResponse.data || [];
-      if (allProgress.length > 0) {
-        const weeklyData = allProgress.slice(-7).map((p, index) => ({
-          label: `Week ${index + 1}`,
-          value: p.progressPercentage || 0
-        }));
-        setProgressData(weeklyData.length > 0 ? weeklyData : [
-          { label: 'Week 1', value: 0 }
-        ]);
-      } else {
-        setProgressData([{ label: 'Week 1', value: 0 }]);
+      let dashboardData = {};
+      if (dashRes.ok) {
+        dashboardData = await dashRes.json();
       }
 
-      // Generate recent activity from progress
-      const activities = allProgress
-        .filter(p => p.updatedAt)
-        .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
-        .slice(0, 4)
-        .map(p => ({
-          action: p.isCompleted ? 'Completed' : 'Progress',
-          item: p.moduleId?.title || 'Module',
-          time: new Date(p.updatedAt).toLocaleDateString(),
-          icon: p.isCompleted ? '✅' : '📖'
+      setStats({
+        activeModules: dashboardData.activeModules || 0,
+        completed: dashboardData.completed || 0,
+        streak: dashboardData.streak || 0,
+        totalPoints: dashboardData.totalPoints || 0
+      });
+
+      // The chart will just show flat enrollment numbers over time or static placeholders based on prompt "Show progress bar for each module... Learning Progress section". 
+      // The prompt actually wants a list of active modules, not a generic line graph, but I'll pass enrolledModules to ProgressData safely.
+      setProgressData(dashboardData.enrolledModules || []);
+
+      if (activityRes.ok) {
+        const actData = await activityRes.json();
+        // Map to standard layout expected
+        const acts = actData.map(a => ({
+          action: a.action,
+          item: a.item,
+          icon: a.icon || '📝',
+          time: new Date(a.createdAt).toLocaleString()
         }));
-      setRecentActivity(activities.length > 0 ? activities : [
-        { action: 'Welcome!', item: 'Start your first module', time: 'Just now', icon: '👋' }
-      ]);
+        setRecentActivity(acts.length > 0 ? acts : [
+          { action: 'Welcome!', item: 'Start your dynamic learning journey', time: 'Just now', icon: '👋' }
+        ]);
+      }
     } catch (error) {
       console.error('Failed to load dashboard:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadRoadmapData = async () => {
+    if (!user) return;
+    try {
+      setRoadmapLoading(true);
+      const userKey = user.id || user._id || 'me';
+      const cached = getCachedValue(`roadmap_${userKey}`);
+      if (cached) {
+        setRoadmap(cached);
+      }
+
+      const response = await personalizationAPI.getRoadmap();
+      setRoadmap(response.data);
+      setCachedValue(`roadmap_${userKey}`, response.data);
+    } catch {
+      // Keep dashboard resilient when roadmap isn't ready yet
+    } finally {
+      setRoadmapLoading(false);
+    }
+  };
+
+  const loadPerformanceAndReports = async () => {
+    try {
+      const [perfRes, reportRes, historyRes] = await Promise.all([
+        performanceAPI.getSummary().catch(() => null),
+        weeklyReportsAPI.getCurrent().catch(() => null),
+        weeklyReportsAPI.getHistory().catch(() => null)
+      ]);
+      if (perfRes?.data) {
+        setPerformanceSummary({
+          averageQuizScorePercentage: perfRes.data.averageQuizScorePercentage || 0,
+          weakAreas: perfRes.data.weakAreas || [],
+          strongAreas: perfRes.data.strongAreas || [],
+          totalTimeSpentSeconds: perfRes.data.totalTimeSpentSeconds || 0,
+          currentStreak: perfRes.data.currentStreak || 0
+        });
+      }
+      if (reportRes?.data) setWeeklyReport(reportRes.data);
+      if (historyRes?.data) setWeeklyHistory(historyRes.data);
+    } catch {
+      // silent failure to preserve old dashboard
     }
   };
 
@@ -88,13 +156,73 @@ const Dashboard = () => {
     { label: 'Settings', icon: '⚙️' },
   ];
 
+  // Set dynamic page title
+  useEffect(() => {
+    document.title = `Dashboard — Code Learn Hub`;
+    return () => { document.title = 'Code Learn Hub'; };
+  }, []);
+
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen pt-20 flex items-center justify-center">
-        <p className="text-gray-400 text-lg">Loading dashboard...</p>
+      <div className="min-h-screen pt-20 px-6">
+        <div className="container mx-auto py-8">
+          {/* Skeleton header */}
+          <div className="animate-pulse mb-8">
+            <div className="h-10 w-72 bg-white/10 rounded-lg mb-3"></div>
+            <div className="h-5 w-48 bg-white/10 rounded"></div>
+          </div>
+          {/* Skeleton stats */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="glass rounded-custom p-6 border border-white/10 animate-pulse">
+                <div className="h-10 w-10 bg-white/10 rounded mb-4"></div>
+                <div className="h-8 w-16 bg-white/10 rounded mb-2"></div>
+                <div className="h-4 w-24 bg-white/10 rounded"></div>
+              </div>
+            ))}
+          </div>
+          {/* Skeleton cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="glass rounded-custom p-6 border border-white/10 animate-pulse">
+                <div className="h-6 w-40 bg-white/10 rounded mb-6"></div>
+                <div className="space-y-3">
+                  {[...Array(4)].map((_, j) => (
+                    <div key={j} className="h-4 bg-white/10 rounded" style={{ width: `${70 + j * 7}%` }}></div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
+
+  const greetingPrefix = (() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  })();
+
+  const getTodayPlan = () => {
+    const nextModule = progressData.find((p) => p.percent < 100) || progressData[0];
+    const nextLessonEstimate = nextModule ? `${Math.max(1, Math.ceil((100 - nextModule.percent) / 10))} lesson steps left` : 'Pick a new module';
+    const dailyChallenge = performanceSummary.weakAreas[0]
+      ? `Revise weak topic: ${performanceSummary.weakAreas[0]}`
+      : 'Solve one coding challenge from your current module';
+    const estimatedTime = roadmap?.dailyStudyPlan || '60 minutes focused practice';
+    return {
+      nextLesson: nextModule ? `${nextModule.title} (${nextLessonEstimate})` : 'Start your first module',
+      challenge: dailyChallenge,
+      estimatedTime
+    };
+  };
+
+  const predictedCompletionDate = weeklyReport?.predictedCompletionDate || 'Not enough data yet';
+  const todayPlan = getTodayPlan();
+  const lessonsCompletedThisWeek = weeklyReport?.totalLessonsCompleted || 0;
 
   return (
     <div className="min-h-screen pt-20 flex">
@@ -116,7 +244,7 @@ const Dashboard = () => {
               key={index}
               whileHover={{ x: 5 }}
               onClick={() => {
-                if (item.label === 'My Modules') navigate('/modules');
+                if (item.label === 'My Modules') navigate('/modules', { state: { filterEnrolled: true } });
                 else if (item.label === 'Achievements') navigate('/gamification');
                 else if (item.label === 'Overview') navigate('/dashboard');
                 else if (item.label === 'Progress') document.getElementById('progress-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -145,7 +273,7 @@ const Dashboard = () => {
                   Welcome Back{user?.name ? `, ${user.name}` : ''}!
                 </span>
               </h1>
-              <p className="text-gray-400">Here's your learning summary</p>
+              <p className="text-gray-400">{greetingPrefix} {user?.name || 'Coder'}! Ready to code today? 🔥</p>
             </div>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -155,6 +283,84 @@ const Dashboard = () => {
             >
               ☰
             </motion.button>
+          </div>
+
+          {/* Personalized Roadmap */}
+          {roadmapLoading && (
+            <div className="glass rounded-custom p-6 border border-white/20 mb-8">
+              <div className="animate-pulse h-6 w-64 bg-white/10 rounded mb-4"></div>
+              <div className="animate-pulse h-4 w-full bg-white/10 rounded mb-3"></div>
+              <div className="animate-pulse h-4 w-4/5 bg-white/10 rounded"></div>
+            </div>
+          )}
+          {!roadmapLoading && roadmap && (
+            <RoadmapTimeline
+              roadmap={roadmap}
+              onOpenModule={(moduleId) => navigate(`/modules/${moduleId}/lessons`)}
+            />
+          )}
+
+          {/* Personalized Plan */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-custom p-6 border border-white/20 lg:col-span-2">
+              <h3 className="text-xl font-bold mb-4 text-white">Today's AI Recommended Plan</h3>
+              <div className="space-y-3 text-gray-300">
+                <p><span className="text-cyan-glow font-semibold">Next lesson:</span> {todayPlan.nextLesson}</p>
+                <p><span className="text-cyan-glow font-semibold">Daily challenge:</span> {todayPlan.challenge}</p>
+                <p><span className="text-cyan-glow font-semibold">Estimated time:</span> {todayPlan.estimatedTime}</p>
+                <p><span className="text-cyan-glow font-semibold">Predicted completion date:</span> {predictedCompletionDate}</p>
+              </div>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-custom p-6 border border-white/20">
+              <h3 className="text-xl font-bold mb-4 text-white">Performance Snapshot</h3>
+              <div className="space-y-3 text-gray-300">
+                <p><span className="text-cyan-glow font-semibold">Avg quiz score:</span> {performanceSummary.averageQuizScorePercentage}%</p>
+                <p><span className="text-cyan-glow font-semibold">Current streak:</span> {performanceSummary.currentStreak || stats.streak} days</p>
+                <p><span className="text-cyan-glow font-semibold">XP points:</span> {stats.totalPoints}</p>
+                <p><span className="text-cyan-glow font-semibold">Lessons this week:</span> {lessonsCompletedThisWeek}</p>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Weekly AI report */}
+          {weeklyReport && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-custom p-6 border border-white/20 mb-8">
+              <h3 className="text-2xl font-bold text-white mb-4">Weekly AI Progress Report</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-300">
+                <p><span className="text-cyan-glow font-semibold">Strongest topic:</span> {weeklyReport.strongestTopic}</p>
+                <p><span className="text-cyan-glow font-semibold">Weakest topic:</span> {weeklyReport.weakestTopic}</p>
+                <p><span className="text-cyan-glow font-semibold">Average this week:</span> {weeklyReport.averageQuizScore}%</p>
+                <p><span className="text-cyan-glow font-semibold">Focus next week:</span> {weeklyReport.recommendedFocus}</p>
+              </div>
+              <div className="mt-4 p-4 bg-dark-blue-gray rounded-lg border border-white/10 text-gray-200">
+                {weeklyReport.motivationalMessage}
+              </div>
+              {weeklyHistory.length > 1 && (
+                <div className="mt-4 text-sm text-gray-400">
+                  Previous reports saved: {Math.max(weeklyHistory.length - 1, 0)}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* Weak and strong areas */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="glass rounded-custom p-6 border border-white/20">
+              <h3 className="text-xl font-bold mb-4 text-white">Weak Areas</h3>
+              <div className="space-y-2">
+                {performanceSummary.weakAreas.length ? performanceSummary.weakAreas.slice(0, 6).map((topic, idx) => (
+                  <div key={`${topic}-${idx}`} className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-400/20 text-red-200">{topic}</div>
+                )) : <div className="text-gray-400">No weak areas detected yet.</div>}
+              </div>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="glass rounded-custom p-6 border border-white/20">
+              <h3 className="text-xl font-bold mb-4 text-white">Strong Areas</h3>
+              <div className="space-y-2">
+                {performanceSummary.strongAreas.length ? performanceSummary.strongAreas.slice(0, 6).map((topic, idx) => (
+                  <div key={`${topic}-${idx}`} className="px-3 py-2 rounded-lg bg-green-500/10 border border-green-400/20 text-green-200">{topic}</div>
+                )) : <div className="text-gray-400">Strong areas will appear after quiz completions.</div>}
+              </div>
+            </motion.div>
           </div>
 
           {/* Stats Cards */}
@@ -215,8 +421,35 @@ const Dashboard = () => {
 
           {/* Charts and Activity */}
           <div id="progress-section" className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* Progress Graph */}
-            <ProgressGraph data={progressData} />
+            {/* Learning Progress Cards */}
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="glass rounded-custom p-6 border border-white/20 overflow-y-auto"
+              style={{ maxHeight: '400px' }}
+            >
+              <h3 className="text-xl font-bold mb-6 text-white flex items-center"><span className="mr-2">📈</span> Learning Progress</h3>
+              <div className="space-y-6">
+                {progressData.length > 0 ? progressData.map((mod, i) => (
+                  <div key={i}>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="font-semibold text-white">{mod.title}</span>
+                      <span className="text-cyan-glow font-bold">{mod.completeCount} / {mod.totalLessons} ({mod.percent}%)</span>
+                    </div>
+                    <div className="w-full bg-dark-blue-gray rounded-full h-2 overflow-hidden border border-white/5">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${mod.percent}%` }}
+                        transition={{ duration: 1 }}
+                        className="h-full bg-gradient-to-r from-neon-purple to-cyan-glow"
+                      />
+                    </div>
+                  </div>
+                )) : (
+                  <div className="text-gray-400 text-sm">No active modules found. Head to Modules to start learning!</div>
+                )}
+              </div>
+            </motion.div>
 
             {/* Recent Activity */}
             <motion.div
@@ -247,7 +480,7 @@ const Dashboard = () => {
             </motion.div>
           </div>
 
-          {/* Learning Summary */}
+          {/* Learning Summary — live data */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -256,15 +489,21 @@ const Dashboard = () => {
             <h3 className="text-2xl font-bold mb-6 text-white">Learning Summary</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
-                <div className="text-4xl font-bold text-cyan-glow mb-2">87%</div>
-                <div className="text-gray-400">Average Score</div>
+                <div className="text-4xl font-bold text-cyan-glow mb-2">
+                  {performanceSummary.averageQuizScorePercentage}%
+                </div>
+                <div className="text-gray-400">Average Quiz Score</div>
               </div>
               <div className="text-center">
-                <div className="text-4xl font-bold text-cyan-glow mb-2">24h</div>
-                <div className="text-gray-400">This Week</div>
+                <div className="text-4xl font-bold text-cyan-glow mb-2">
+                  {performanceSummary.totalTimeSpentSeconds > 0
+                    ? `${Math.round(performanceSummary.totalTimeSpentSeconds / 3600 * 10) / 10}h`
+                    : '0h'}
+                </div>
+                <div className="text-gray-400">Total Study Time</div>
               </div>
               <div className="text-center">
-                <div className="text-4xl font-bold text-cyan-glow mb-2">5</div>
+                <div className="text-4xl font-bold text-cyan-glow mb-2">{stats.activeModules}</div>
                 <div className="text-gray-400">Active Modules</div>
               </div>
             </div>

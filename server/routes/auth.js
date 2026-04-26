@@ -1,98 +1,89 @@
 import express from 'express';
-import jwt from 'jsonwebtoken';
+import admin from '../firebaseAdmin.js';
 import User from '../models/User.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = express.Router();
-// JWT_SECRET moved inside handlers to ensure dotenv is loaded
 
-// Register
+// Register: Sync Firebase User to MongoDB
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email } = req.body;
+    const token = req.headers.authorization?.split(' ')[1];
 
+    if (!token) return res.status(401).json({ message: 'No token provided' });
+
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    
     // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Create user
-    const user = new User({ name, email, password });
+    // Create user in MongoDB linked to Firebase
+    const user = new User({ 
+      name, 
+      email, 
+      firebaseUid: decodedToken.uid 
+    });
     await user.save();
-
-    // Generate token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '7d' });
 
     res.status(201).json({
-      token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
-        avatar: user.avatar,
         points: user.points,
-        level: user.level
+        plan: user.plan
       }
     });
   } catch (error) {
+    console.error('Registration Sync Error:', error);
     res.status(500).json({ message: error.message });
   }
 });
 
-// Login
-router.post('/login', async (req, res) => {
+// Get current user (this handles the login sync technically, since /me is fetched after Firebase login)
+router.get('/me', authenticate, async (req, res) => {
   try {
-    const { email, password } = req.body;
-
-    // Find user
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    // Check password
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    // Update last active date
-    user.lastActiveDate = new Date();
-    await user.save();
-
-    // Generate token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '7d' });
-
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-        points: user.points,
-        level: user.level,
-        streak: user.streak
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// Get current user
-router.get('/me', async (req, res) => {
-  try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-    const user = await User.findById(decoded.userId).select('-password');
+    const user = await User.findById(req.userId).select('-password');
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update login streak
+    const now = new Date();
+    let isModified = false;
+
+    if (user.lastLoginDate) {
+      const last = new Date(user.lastLoginDate);
+      const startOfNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const startOfLast = new Date(last.getFullYear(), last.getMonth(), last.getDate());
+      const diffDays = Math.floor((startOfNow - startOfLast) / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) {
+        user.streak = (user.streak || 0) + 1;
+        isModified = true;
+      } else if (diffDays > 1) {
+        user.streak = 1;
+        isModified = true;
+      }
+    } else {
+      user.streak = 1;
+      isModified = true;
+    }
+
+    if (isModified) {
+        if ((user.streak || 0) >= 7 && (user.streakBonusClaimed || 0) < 7) {
+          user.points = (user.points || 0) + 200; // 7-day streak bonus XP
+          user.streakBonusClaimed = 7;
+        } else if ((user.streak || 0) < 7) {
+          user.streakBonusClaimed = 0;
+        }
+        user.lastLoginDate = now;
+        await user.save();
     }
 
     res.json(user);

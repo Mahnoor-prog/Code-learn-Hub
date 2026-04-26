@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { chatbotAPI } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 const Chatbot = () => {
+  const { user } = useAuth();
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -13,6 +15,75 @@ const Chatbot = () => {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const sendQuickPrompt = async (promptText, fallbackText) => {
+    if (!promptText.trim() || loading) return;
+    const userMessage = {
+      id: Date.now(),
+      text: promptText,
+      sender: 'user',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setLoading(true);
+
+    try {
+      const response = await chatbotAPI.sendMessage(promptText);
+      const aiMessage = response.data.aiMessage || response.data;
+      const aiResponse = {
+        id: Date.now() + 1,
+        text: aiMessage.text || aiMessage.response || response.data.response || fallbackText || generateAIResponse(promptText),
+        sender: 'ai',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, aiResponse]);
+    } catch (error) {
+      const aiResponse = {
+        id: Date.now() + 1,
+        text: fallbackText || generateAIResponse(promptText),
+        sender: 'ai',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, aiResponse]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAnalyzePerformance = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const res = await chatbotAPI.analyzePerformance();
+      const aiResponse = {
+        id: Date.now() + 1,
+        text: res.data?.analysis || 'Could not analyze performance right now.',
+        sender: 'ai',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        text: 'Analyze my performance',
+        sender: 'user',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }, aiResponse]);
+    } catch {
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        text: 'Performance analysis is unavailable right now. Please try again shortly.',
+        sender: 'ai',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    document.title = 'AI Chatbot — Code Learn Hub';
+    return () => { document.title = 'Code Learn Hub'; };
+  }, []);
 
   useEffect(() => {
     loadChatHistory();
@@ -172,6 +243,7 @@ const Chatbot = () => {
             </span>
           </h1>
           <p className="text-gray-400">Get instant help with your coding questions</p>
+          <p className="text-sm text-cyan-glow mt-2">Personalized for {user?.name || 'you'} based on progress, weak/strong areas, and recent quiz scores.</p>
         </motion.div>
       </section>
 
@@ -256,6 +328,16 @@ const Chatbot = () => {
         {/* Quick Suggestions */}
         <div className="mt-6">
           <p className="text-gray-400 mb-3 text-sm">Quick questions about our 5 languages:</p>
+          <div className="mb-3">
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleAnalyzePerformance}
+              className="px-4 py-2 rounded-full bg-gradient-to-r from-cyan-glow/30 to-indigo-primary/30 border border-cyan-glow/40 text-cyan-glow text-sm"
+            >
+              Analyze my performance
+            </motion.button>
+          </div>
           <div className="flex flex-wrap gap-2">
             {[
               'Python functions',
@@ -271,43 +353,7 @@ const Chatbot = () => {
                 key={index}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={async () => {
-                  if (!suggestion.trim() || loading) return;
-
-                  const userMessage = {
-                    id: Date.now(),
-                    text: suggestion,
-                    sender: 'user',
-                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                  };
-
-                  setMessages(prev => [...prev, userMessage]);
-                  setLoading(true);
-
-                  try {
-                    const response = await chatbotAPI.sendMessage(suggestion);
-                    const aiMessage = response.data.aiMessage || response.data;
-                    const aiResponse = {
-                      id: Date.now() + 1,
-                      text: aiMessage.text || aiMessage.response || response.data.response || generateAIResponse(suggestion),
-                      sender: 'ai',
-                      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    };
-                    setMessages(prev => [...prev, aiResponse]);
-                  } catch (error) {
-                    setTimeout(() => {
-                      const aiResponse = {
-                        id: Date.now() + 1,
-                        text: generateAIResponse(suggestion),
-                        sender: 'ai',
-                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                      };
-                      setMessages(prev => [...prev, aiResponse]);
-                    }, 800);
-                  } finally {
-                    setLoading(false);
-                  }
-                }}
+                onClick={async () => sendQuickPrompt(suggestion)}
                 className="px-4 py-2 glass rounded-full text-sm border border-white/20 hover:border-cyan-glow transition-all"
               >
                 {suggestion}

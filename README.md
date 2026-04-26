@@ -1,139 +1,105 @@
-# Code Learn Hub - Full Stack Learning Platform
+# Code Learn Hub - Full Stack AI Learning Platform
 
-A modern, AI-powered coding education platform built with React, Node.js, Express, and MongoDB.
+A modern, highly-advanced AI-powered coding education platform built with React, Node.js, Express, MongoDB, and Firebase.
 
-## 🚀 Features
+## 🚀 Key Features & Recent Updates
 
-- **5 Core Languages**: Python, C++, C#, Java, React
-- **AI-Powered Learning**: Personalized content generation and chatbot assistance
-- **Progress Tracking**: Real-time progress tracking and analytics
-- **Gamification**: Badges, points, leaderboards, and achievements
-- **Interactive IDE**: Practice coding directly in the browser
-- **User Authentication**: Secure registration and login system
-- **Dashboard**: Comprehensive learning analytics
+- **🔥 Firebase Authentication**: Fully integrated Firebase Auth for secure, seamless registration and login, synced with MongoDB profiles.
+- **🤖 AI Error Helper (IDE)**: A custom Antigravity AI tutor embedded directly in the browser IDE. It diagnoses errors, provides code snippets, and suggests revision topics using an advanced OpenAI prompt.
+- **💻 Secure Code Execution**: A dedicated `execution-server` running Node.js to safely execute user-submitted Python, JS, C++, Java, and C# code.
+- **💳 Subscription & Lesson Locking**: Integrated user plans (`free`, `student`, `pro`). Free users are restricted to the first 3 lessons per module.
+- **🧠 Personalized Learning Paths**: AI-generated weekly roadmaps, performance reports, and dynamic lesson suggestions based on user progress.
+- **🏆 Advanced Gamification**: Real-time leaderboards, dynamic streak tracking, badges, and XP point accumulation.
+- **📚 Dynamic Content**: Modules and lessons generated dynamically via the OpenAI API.
+- **🎨 Modern UI/UX**: Polished interface with dynamic loading skeletons, glassmorphism design, and responsive mobile sidebars.
 
 ## 📋 Prerequisites
 
-- Node.js (v16 or higher)
+- Node.js (v18 or higher recommended)
 - MongoDB (local or MongoDB Atlas)
-- npm or yarn
+- Firebase Project (for Authentication)
+- OpenAI API Key
 
 ## 🛠️ Installation
 
 1. **Clone the repository**
    ```bash
    git clone <your-repo-url>
-   cd trywebsite
+   cd code-learn-hub
    ```
 
 2. **Install dependencies**
    ```bash
    npm install
+   cd server && npm install
+   cd ../execution-server && npm install
    ```
 
-3. **Set up environment variables**
-   Create a `.env` file in the root directory:
+3. **Set up Environment Variables**
+   Create a `.env` in the root (for frontend):
+   ```env
+   VITE_API_URL=http://localhost:5000/api
+   VITE_FIREBASE_API_KEY="your-key"
+   VITE_FIREBASE_AUTH_DOMAIN="your-domain"
+   VITE_FIREBASE_PROJECT_ID="your-project-id"
+   VITE_FIREBASE_STORAGE_BUCKET="your-bucket"
+   VITE_FIREBASE_MESSAGING_SENDER_ID="your-id"
+   VITE_FIREBASE_APP_ID="your-app-id"
+   ```
+
+   Create a `server/.env` (for backend):
    ```env
    PORT=5000
-   MONGODB_URI=mongodb://localhost:27017/codelearnhub
-   JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+   MONGODB_URI=mongodb+srv://...
+   OPENAI_API_KEY=sk-...
+   FIREBASE_PROJECT_ID=your-project-id
+   DEV_BYPASS_AUTH=false
    ```
 
-4. **Start MongoDB**
-   - If using local MongoDB, make sure it's running
-   - Or use MongoDB Atlas and update `MONGODB_URI` in `.env`
-
-5. **Seed the database (optional)**
-   ```bash
-   node server/seed.js
-   ```
-
-6. **Start the development servers**
+4. **Start the development servers**
    ```bash
    npm run dev
    ```
-   This will start both:
-   - Backend server on `http://localhost:5000`
-   - Frontend dev server on `http://localhost:5173`
+   This `concurrently` starts:
+   - Backend API server on `http://localhost:5000`
+   - Code Execution Sandbox on `http://localhost:3000`
+   - Frontend Vite server on `http://localhost:5173`
 
 ## 📁 Project Structure
 
 ```
 trywebsite/
-├── server/                 # Backend code
-│   ├── models/            # MongoDB models
-│   ├── routes/            # API routes
-│   ├── middleware/         # Auth middleware
-│   ├── index.js           # Server entry point
-│   └── seed.js            # Database seeder
-├── src/                   # Frontend code
-│   ├── components/        # React components
-│   ├── pages/            # Page components
-│   ├── context/          # React context (Auth)
-│   ├── utils/            # Utilities (API, dummyData)
-│   └── styles/           # CSS styles
+├── server/                 # Main Node/Express Backend
+│   ├── firebaseAdmin.js   # Firebase Admin initialization
+│   ├── models/            # MongoDB schemas (User, Progress, etc)
+│   ├── routes/            # API routes (aicontent, auth, gamification)
+│   └── middleware/         # Auth verification middleware
+├── execution-server/       # Secure Sandbox Environment
+│   └── server.js          # Handles /execute requests
+├── src/                   # React Frontend
+│   ├── components/        # Reusable UI components
+│   ├── pages/            # Main views (IDE, Dashboard, LessonPage)
+│   ├── context/          # Auth & Personalization Context
+│   └── firebase.js       # Firebase client config
 └── package.json
 ```
 
-## 🔌 API Endpoints
+## 🔌 Core API Endpoints
 
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/me` - Get current user
+### Authentication (Firebase Sync)
+- `POST /api/auth/register` - Sync Firebase user to MongoDB
+- `GET /api/auth/me` - Get current user profile and calculate streaks
 
-### Modules
-- `GET /api/modules` - Get all modules (with filters)
-- `GET /api/modules/:id` - Get single module
-- `GET /api/modules/:id/progress` - Get module with user progress
+### AI Content & Sandbox
+- `POST /api/aicontent/debug` - AI Error Helper analysis
+- `POST /api/code/run` - Forwards to execution-server for sandboxing
 
-### Progress
-- `GET /api/progress/module/:moduleId` - Get user progress for module
-- `POST /api/progress/module/:moduleId` - Update progress
-- `GET /api/progress/all` - Get all user progress
-
-### Dashboard
-- `GET /api/dashboard` - Get dashboard stats
-
-### Chatbot
-- `GET /api/chatbot/history` - Get chat history
-- `POST /api/chatbot/message` - Send message
-
-### Gamification
-- `GET /api/gamification/badges` - Get user badges
-- `GET /api/gamification/leaderboard` - Get leaderboard
-- `POST /api/gamification/check-badges` - Check and award badges
-
-## 🎯 Usage
-
-1. **Register/Login**: Create an account or login
-2. **Browse Modules**: Explore modules for Python, C++, C#, Java, and React
-3. **Track Progress**: Your progress is automatically saved
-4. **Use Chatbot**: Ask questions about coding concepts
-5. **Earn Badges**: Complete lessons to unlock achievements
-6. **View Dashboard**: See your learning statistics
-
-## 🛡️ Authentication
-
-The app uses JWT (JSON Web Tokens) for authentication. Tokens are stored in localStorage and automatically included in API requests.
-
-## 📝 Notes
-
-- The chatbot uses a rule-based system (can be replaced with OpenAI API)
-- Progress is tracked automatically when lessons are completed
-- Badges are awarded automatically based on achievements
-- All API endpoints require authentication except registration/login
-
-## 🚀 Production Build
-
-```bash
-npm run build
-```
-
-The frontend will be built to the `dist` folder.
+### Personalization & Gamification
+- `GET /api/gamification/leaderboard` - Live user rankings
+- `GET /api/personalization/roadmap` - AI-generated weekly study plan
+- `GET /api/dashboard/performance` - Advanced user analytics
 
 ## 📄 License
-
 MIT
 
 

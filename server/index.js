@@ -9,6 +9,11 @@ import dashboardRoutes from './routes/dashboard.js';
 import chatbotRoutes from './routes/chatbot.js';
 import gamificationRoutes from './routes/gamification.js';
 import aicontentRoutes from './routes/aicontent.js';
+import codeRoutes from './routes/code.js';
+import activityRoutes from './routes/activity.js';
+import personalizationRoutes from './routes/personalization.js';
+import performanceRoutes from './routes/performance.js';
+import weeklyReportsRoutes from './routes/weeklyReports.js';
 
 dotenv.config({ path: './server/.env' });
 
@@ -37,28 +42,30 @@ const mongooseOptions = {
 };
 
 // Connect to MongoDB
-mongoose.connect(MONGODB_URI, mongooseOptions)
-  .then(() => {
+const connectDB = async () => {
+  try {
+    await mongoose.connect(MONGODB_URI, mongooseOptions);
     const dbName = MONGODB_URI.includes('@')
       ? MONGODB_URI.split('@')[1]?.split('/')[1]?.split('?')[0] || 'Atlas Database'
       : 'Local MongoDB';
     console.log('✅ MongoDB Connected successfully!');
     console.log(`   Database: ${dbName}`);
-    console.log(`   Connection State: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Connecting'}`);
-  })
-  .catch(err => {
+
+    // Seed demo data globally instantly on boot if necessary
+    const { seedDemoData } = await import('./utils/seeder.js');
+    await seedDemoData();
+  } catch (err) {
     console.error('❌ MongoDB Connection Error:', err.message);
-    console.log('\n💡 Troubleshooting Steps:');
-    console.log('   1. Check if .env file exists with correct MONGODB_URI');
-    console.log('   2. MongoDB Atlas Network Access allows your IP (0.0.0.0/0 for all)');
-    console.log('   3. Database user has correct permissions');
-    console.log('   4. Wait 2-5 minutes after changing Network Access settings');
-    console.log('   5. Verify connection string format is correct\n');
-  });
+    console.log('Reconnecting in 5 seconds...');
+    setTimeout(connectDB, 5000);
+  }
+};
+
+connectDB();
 
 // MongoDB connection event handlers
 mongoose.connection.on('connected', () => {
-  console.log('📡 Mongoose connected to MongoDB');
+  console.log('📡 Mongoose connection established');
 });
 
 mongoose.connection.on('error', (err) => {
@@ -66,8 +73,10 @@ mongoose.connection.on('error', (err) => {
 });
 
 mongoose.connection.on('disconnected', () => {
-  console.log('⚠️  Mongoose disconnected from MongoDB');
+  console.log('⚠️ MongoDB disconnected. Attempting to reconnect...');
+  setTimeout(connectDB, 5000);
 });
+
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
@@ -83,7 +92,14 @@ app.use('/api/progress', progressRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/gamification', gamificationRoutes);
+app.use('/api/badges', gamificationRoutes);
 app.use('/api/aicontent', aicontentRoutes);
+app.use('/api/ai', aicontentRoutes);
+app.use('/api/code', codeRoutes);
+app.use('/api/activity', activityRoutes);
+app.use('/api/personalization', personalizationRoutes);
+app.use('/api/performance', performanceRoutes);
+app.use('/api/weekly-reports', weeklyReportsRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {

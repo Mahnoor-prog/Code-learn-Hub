@@ -2,7 +2,7 @@ import express from 'express';
 import OpenAI from 'openai';
 import { authenticate } from '../middleware/auth.js';
 import Progress from '../models/Progress.js';
-import Lesson from '../models/Lesson.js';
+import AICachedLesson from '../models/AICachedLesson.js';
 import Quiz from '../models/Quiz.js';
 
 const router = express.Router();
@@ -15,13 +15,38 @@ router.use((req, res, next) => {
   next();
 });
 
-// Generate AI Lesson
+// Generate AI Lesson dynamically exactly per User Requirements
+router.post('/generate-lesson', authenticate, async (req, res) => {
+  try {
+    const { language, difficulty, topic, lessonNumber } = req.body;
+
+    const prompt = `You are an expert programming teacher. Create a detailed lesson for ${language} at ${difficulty} level on topic: ${topic}. Include: clear explanation, real code example with comments, and a practice exercise. Format as JSON with fields: title, explanation, codeExample, exercise`;
+
+    const response = await getOpenAI().chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 1500
+    });
+
+    const output = response.choices[0].message.content.trim();
+    const jsonStr = output.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    const parsed = JSON.parse(jsonStr);
+
+    res.json(parsed);
+  } catch (error) {
+    console.error('Failed to generate lesson:', error);
+    res.status(500).json({ message: 'Failed to generate lesson' });
+  }
+});
+
+// Generate AI Lesson (legacy)
 router.post('/lesson', authenticate, async (req, res) => {
   try {
     const { topic, language, level } = req.body;
 
     // Check if lesson already exists in MongoDB
-    const existingLesson = await Lesson.findOne({ topic, language, level });
+    const existingLesson = await AICachedLesson.findOne({ topic, language, level });
     if (existingLesson) {
       return res.json(existingLesson);
     }
@@ -64,7 +89,7 @@ Make the lesson clear, practical and educational. Include real working code exam
     }
 
     // Save to MongoDB so we don't regenerate
-    const lesson = new Lesson({
+    const lesson = new AICachedLesson({
       topic,
       language,
       level,
@@ -184,53 +209,62 @@ router.post('/debug', authenticate, async (req, res) => {
   try {
     const { code, language, error } = req.body;
 
-    const prompt = `You are an expert ${language} programmer and teacher. A student has the following code with an error:
+    const prompt = `You are an expert programming tutor and error analyst embedded inside a coding IDE called Antigravity. 
+
+When a user encounters a code error, you will:
+
+1. **DIAGNOSE** the error clearly in simple language (assume the user is a beginner/intermediate learner). Explain WHAT went wrong and WHY it happened in 2-3 sentences max.
+
+2. **SHOW THE MISTAKE** — Point to the exact line or pattern causing the issue. Format it as:
+   ❌ You wrote: [their broken code snippet]
+   ✅ It should be: [corrected code snippet]
+
+3. **GIVE 2-3 SIMILAR CODE SUGGESTIONS** — Provide alternative correct ways to write the same logic, so the user sees different valid approaches.
+
+4. **TOPIC REVISION TIP** — End with a short "💡 Tip to revise:" section that names the exact concept they should review (e.g., "Revise: JavaScript Promises and async/await") with one sentence explaining why this topic matters.
+
+FORMAT your response EXACTLY like this:
+
+---
+🔴 ERROR DETECTED
+[Error type and simple explanation]
+
+🔍 YOUR MISTAKE
+❌ You wrote: \`[broken code]\`
+✅ Fix it like this: \`[corrected code]\`
+
+💡 WHY THIS HAPPENS
+[1-2 sentence explanation of the root cause]
+
+🛠️ SIMILAR CORRECT APPROACHES
+Option 1: \`[code]\`
+Option 2: \`[code]\`
+Option 3: \`[code]\` (if applicable)
+
+📚 TIP TO REVISE
+Topic: [Topic Name]
+[One sentence on why mastering this will prevent this error]
+---
+
+Keep responses concise, encouraging, and never condescending. The user is learning — celebrate their attempt before correcting them.
 
 CODE:
 ${code}
 
 ERROR:
 ${error || 'No specific error message provided'}
-
-Please provide:
-1. What is wrong with the code
-2. Which line has the issue
-3. Why it is wrong
-4. The corrected code
-
-Return ONLY a JSON object with this format:
-{
-  "issue": "brief description of the problem",
-  "errorLine": "the specific line with the error",
-  "explanation": "clear explanation of why it is wrong",
-  "fixedCode": "the complete corrected code",
-  "tip": "a helpful tip to avoid this error in future"
-}`;
+`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 1000,
+      max_tokens: 1500,
       temperature: 0.3
     });
 
     const responseText = completion.choices[0].message.content;
-    let debugResult;
 
-    try {
-      const clean = responseText.replace(/```json|```/g, '').trim();
-      debugResult = JSON.parse(clean);
-    } catch {
-      debugResult = {
-        issue: 'Code analysis complete',
-        errorLine: '',
-        explanation: responseText,
-        fixedCode: code,
-        tip: 'Review your code carefully'
-      };
-    }
-
-    res.json(debugResult);
+    res.json({ markdown: responseText });
   } catch (error) {
     console.error('AI Debug Error:', error);
     res.status(500).json({ message: 'Failed to debug code.' });

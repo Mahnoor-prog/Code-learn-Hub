@@ -12,8 +12,10 @@ import Chatbot from './pages/Chatbot';
 import Gamification from './pages/Gamification';
 import Modules from './pages/Modules';
 import ModuleDetails from './pages/ModuleDetails';
+import LessonPage from './pages/LessonPage';
 import Dashboard from './pages/Dashboard';
 import Contact from './pages/Contact';
+import PersonalizationGate from './components/personalization/PersonalizationGate';
 
 function App() {
   return (
@@ -21,6 +23,7 @@ function App() {
       <Router>
         <div className="min-h-screen flex flex-col">
           <Header />
+          <PersonalizationGate />
           <main className="flex-1">
             <Routes>
               <Route path="/" element={<Landing />} />
@@ -33,6 +36,7 @@ function App() {
               <Route path="/gamification" element={<Gamification />} />
               <Route path="/modules" element={<Modules />} />
               <Route path="/modules/:id" element={<ModuleDetails />} />
+              <Route path="/modules/:moduleId/lessons" element={<LessonPage />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/contact" element={<Contact />} />
             </Routes>

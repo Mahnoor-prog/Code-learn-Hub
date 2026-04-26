@@ -2,6 +2,7 @@ import express from 'express';
 import Progress from '../models/Progress.js';
 import Module from '../models/Module.js';
 import User from '../models/User.js';
+import Activity from '../models/Activity.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -23,6 +24,56 @@ router.get('/module/:moduleId', authenticate, async (req, res) => {
     }
 
     res.json(progress);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Update progress explicitly handled by /api/progress via POST
+router.post('/', authenticate, async (req, res) => {
+  try {
+    const { moduleId, lessonId } = req.body;
+
+    let progress = await Progress.findOne({ userId: req.userId, moduleId });
+    if (!progress) {
+      // Find language from module
+      const module = await Module.findById(moduleId);
+      progress = new Progress({
+        userId: req.userId,
+        moduleId,
+        language: module ? module.language : 'Unknown',
+        lessonsCompleted: []
+      });
+      // Log module start
+      if (module) {
+        await new Activity({ userId: req.userId, action: 'Started module', item: module.title, icon: '📖' }).save();
+      }
+    }
+
+    if (!progress.lessonsCompleted.includes(lessonId)) {
+      progress.lessonsCompleted.push(lessonId);
+      const user = await User.findById(req.userId);
+      if (user) {
+        user.points = (user.points || 0) + 50; // Complete lesson = +50 XP
+        await user.save();
+      }
+      const module = await Module.findById(moduleId);
+      if (module) {
+        await new Activity({ userId: req.userId, action: 'Completed lesson in', item: module.title, icon: '✅' }).save();
+      }
+    }
+
+    // Recalculate percentage
+    const module = await Module.findById(moduleId);
+    const totalLessons = module && module.lessonCount ? module.lessonCount : 1;
+    progress.progressPercentage = Math.round((progress.lessonsCompleted.length / totalLessons) * 100);
+
+    if (progress.progressPercentage >= 100) {
+      progress.isCompleted = true;
+    }
+
+    await progress.save();
+    res.json({ progressPercentage: progress.progressPercentage });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
