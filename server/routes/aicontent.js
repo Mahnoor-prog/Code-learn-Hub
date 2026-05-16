@@ -10,7 +10,7 @@ const router = express.Router();
 let openai;
 router.use((req, res, next) => {
   if (!openai) {
-    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    openai = new OpenAI({ apiKey: process.env.GITHUB_AI_TOKEN || process.env.GROK_API_KEY || process.env.OPENAI_API_KEY, baseURL: process.env.GITHUB_AI_ENDPOINT || (process.env.GROK_API_KEY ? "https://api.x.ai/v1" : undefined) });
   }
   next();
 });
@@ -23,7 +23,7 @@ router.post('/generate-lesson', authenticate, async (req, res) => {
     const prompt = `You are an expert programming teacher. Create a detailed lesson for ${language} at ${difficulty} level on topic: ${topic}. Include: clear explanation, real code example with comments, and a practice exercise. Format as JSON with fields: title, explanation, codeExample, exercise`;
 
     const response = await getOpenAI().chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: process.env.GITHUB_AI_MODEL || (process.env.GROK_API_KEY ? "grok-beta" : "gpt-4o-mini"),
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
       max_tokens: 1500
@@ -66,7 +66,7 @@ Structure your response as JSON with this exact format:
 Make the lesson clear, practical and educational. Include real working code examples.`;
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: process.env.GITHUB_AI_MODEL || (process.env.GROK_API_KEY ? "grok-beta" : "gpt-4o-mini"),
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 1500,
       temperature: 0.7
@@ -130,7 +130,7 @@ Return ONLY a JSON array with this exact format:
 correctAnswer is the index (0-3) of the correct option. Make questions practical and educational.`;
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: process.env.GITHUB_AI_MODEL || (process.env.GROK_API_KEY ? "grok-beta" : "gpt-4o-mini"),
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 1500,
       temperature: 0.7
@@ -181,7 +181,7 @@ Return ONLY a JSON array with this exact format:
 ]`;
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: process.env.GITHUB_AI_MODEL || (process.env.GROK_API_KEY ? "grok-beta" : "gpt-4o-mini"),
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 1500,
       temperature: 0.7
@@ -256,7 +256,7 @@ ${error || 'No specific error message provided'}
 `;
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: process.env.GITHUB_AI_MODEL || (process.env.GROK_API_KEY ? "grok-beta" : "gpt-4o-mini"),
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 1500,
       temperature: 0.3
@@ -298,7 +298,7 @@ Return ONLY a JSON object:
 }`;
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: process.env.GITHUB_AI_MODEL || (process.env.GROK_API_KEY ? "grok-beta" : "gpt-4o-mini"),
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 500,
       temperature: 0.7
@@ -333,7 +333,7 @@ router.post('/generate', authenticate, async (req, res) => {
     const prompt = `Generate ${contentType || 'lesson'} content about "${topic}" in ${language} for ${difficulty || 'Beginner'} level. Make it educational and practical.`;
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: process.env.GITHUB_AI_MODEL || (process.env.GROK_API_KEY ? "grok-beta" : "gpt-4o-mini"),
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 1000,
       temperature: 0.7

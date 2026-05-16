@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Landing from './pages/Landing';
@@ -19,32 +20,34 @@ import PersonalizationGate from './components/personalization/PersonalizationGat
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="min-h-screen flex flex-col">
-          <Header />
-          <PersonalizationGate />
-          <main className="flex-1">
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/features" element={<Features />} />
-              <Route path="/ai-content" element={<AIContent />} />
-              <Route path="/personalized" element={<Personalized />} />
-              <Route path="/ide" element={<IDE />} />
-              <Route path="/chatbot" element={<Chatbot />} />
-              <Route path="/gamification" element={<Gamification />} />
-              <Route path="/modules" element={<Modules />} />
-              <Route path="/modules/:id" element={<ModuleDetails />} />
-              <Route path="/modules/:moduleId/lessons" element={<LessonPage />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/contact" element={<Contact />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
-      </Router>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <div className="min-h-screen flex flex-col bg-white dark:bg-deep-navy text-gray-900 dark:text-white transition-colors duration-300">
+            <Header />
+            <PersonalizationGate />
+            <main className="flex-1">
+              <Routes>
+                <Route path="/" element={<Landing />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/features" element={<Features />} />
+                <Route path="/ai-content" element={<AIContent />} />
+                <Route path="/personalized" element={<Personalized />} />
+                <Route path="/ide" element={<IDE />} />
+                <Route path="/chatbot" element={<Chatbot />} />
+                <Route path="/gamification" element={<Gamification />} />
+                <Route path="/modules" element={<Modules />} />
+                <Route path="/modules/:id" element={<ModuleDetails />} />
+                <Route path="/modules/:moduleId/lessons" element={<LessonPage />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/contact" element={<Contact />} />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

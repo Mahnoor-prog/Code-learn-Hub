@@ -31,7 +31,7 @@ const Landing = () => {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white dark:bg-deep-navy transition-colors duration-300">
       <Hero />
 
       {/* Short Features Grid */}
@@ -42,15 +42,15 @@ const Landing = () => {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+          <h2 className="text-3xl md:text-5xl font-bold mb-4">
             <span className="bg-gradient-to-r from-indigo-primary to-cyan-glow bg-clip-text text-transparent">
               Powerful Features
             </span>
           </h2>
-          <p className="text-gray-400 text-lg">Everything you need to master coding</p>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">Everything you need to master coding</p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {shortFeatures.map((feature, index) => (
             <FeatureCard key={feature.id} feature={feature} index={index} />
           ))}
@@ -58,7 +58,7 @@ const Landing = () => {
       </section>
 
       {/* Why Choose Us */}
-      <section className="py-20 bg-dark-blue-gray/50">
+      <section className="py-20 bg-gray-50 dark:bg-dark-blue-gray/50 transition-colors duration-300">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -66,14 +66,14 @@ const Landing = () => {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4">
               <span className="bg-gradient-to-r from-neon-purple to-cyan-glow bg-clip-text text-transparent">
                 Why Choose Us?
               </span>
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {whyChooseUs.map((item, index) => (
               <motion.div
                 key={index}
@@ -82,11 +82,11 @@ const Landing = () => {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -10 }}
-                className="glass rounded-custom p-6 text-center border border-white/20 hover:border-cyan-glow transition-all"
+                className="glass rounded-custom p-6 text-center border border-black/5 dark:border-white/10 hover:border-cyan-glow transition-all"
               >
                 <div className="text-5xl mb-4">{item.icon}</div>
-                <h3 className="text-xl font-bold mb-2 text-white">{item.title}</h3>
-                <p className="text-gray-400">{item.description}</p>
+                <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{item.title}</h3>
+                <p className="text-gray-600 dark:text-gray-400">{item.description}</p>
               </motion.div>
             ))}
           </div>
@@ -101,7 +101,7 @@ const Landing = () => {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+          <h2 className="text-3xl md:text-5xl font-bold mb-4">
             <span className="bg-gradient-to-r from-indigo-primary to-neon-purple bg-clip-text text-transparent">
               What Learners Say
             </span>
@@ -117,21 +117,21 @@ const Landing = () => {
           initial={{ opacity: 0, scale: 0.9 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="glass rounded-custom p-12 text-center max-w-3xl mx-auto border border-cyan-glow/30"
+          className="glass rounded-custom p-8 md:p-12 text-center max-w-3xl mx-auto border border-cyan-glow/30"
         >
-          <h2 className="text-4xl font-bold mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
             <span className="bg-gradient-to-r from-indigo-primary to-cyan-glow bg-clip-text text-transparent">
               Ready to Start Learning?
             </span>
           </h2>
-          <p className="text-gray-300 text-lg mb-8">
+          <p className="text-gray-700 dark:text-gray-300 text-lg mb-8">
             Join thousands of developers mastering coding with AI-powered learning
           </p>
           <Link to="/dashboard">
             <motion.button
               whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(79, 70, 229, 0.6)' }}
               whileTap={{ scale: 0.95 }}
-              className="px-8 py-4 bg-gradient-to-r from-indigo-primary to-neon-purple rounded-custom font-semibold text-lg shadow-glow-purple hover:shadow-glow-cyan transition-all"
+              className="px-8 py-4 bg-gradient-to-r from-indigo-primary to-neon-purple text-white rounded-custom font-semibold text-lg shadow-glow-purple hover:shadow-glow-cyan transition-all"
             >
               Get Started Now
             </motion.button>
@@ -143,4 +143,3 @@ const Landing = () => {
 };
 
 export default Landing;
-

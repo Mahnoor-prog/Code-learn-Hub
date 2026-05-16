@@ -37,123 +37,132 @@ const AuthModal = ({ isOpen, onClose }) => {
 
   return (
     <AnimatePresence>
-      <div
-        style={{
-          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000,
-        }}
-      >
+      <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+        {/* Overlay */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          style={{
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            borderRadius: '16px',
-            padding: '32px',
-            width: '100%',
-            maxWidth: '440px',
-            backdropFilter: 'blur(20px)',
-          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        />
+
+        {/* Modal */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          className="relative w-full max-w-md bg-white dark:bg-[#1E293B] border border-black/10 dark:border-white/20 rounded-2xl p-6 md:p-8 shadow-2xl overflow-hidden transition-colors duration-300"
+          onClick={(e) => e.stopPropagation()}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 'bold', background: 'linear-gradient(to right, #6366f1, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          {/* Decorative element */}
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-indigo-primary/20 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-primary to-neon-purple bg-clip-text text-transparent">
               {isLogin ? 'Welcome Back' : 'Create Account'}
             </h2>
-            <button onClick={onClose} style={{ color: '#9ca3af', fontSize: '28px', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+            <button 
+              onClick={onClose} 
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-white text-3xl leading-none transition-colors"
+            >
+              ×
+            </button>
           </div>
 
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+          <div className="flex gap-2 mb-6">
             <button
-              onClick={() => { setIsLogin(true); setError(''); setFormData({ name: '', email: '', password: '' }); }}
-              style={{
-                flex: 1, padding: '8px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', border: 'none',
-                background: isLogin ? 'linear-gradient(to right, #6366f1, #a855f7)' : 'transparent',
-                color: isLogin ? 'white' : '#9ca3af',
-                border: isLogin ? 'none' : '1px solid rgba(255,255,255,0.2)',
-              }}
+              onClick={() => { setIsLogin(true); setError(''); }}
+              className={`flex-1 py-2.5 rounded-xl font-bold transition-all text-sm ${
+                isLogin 
+                ? 'bg-gradient-to-r from-indigo-primary to-neon-purple text-white shadow-glow-indigo' 
+                : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
+              }`}
             >
               Login
             </button>
             <button
-              onClick={() => { setIsLogin(false); setError(''); setFormData({ name: '', email: '', password: '' }); }}
-              style={{
-                flex: 1, padding: '8px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer',
-                background: !isLogin ? 'linear-gradient(to right, #6366f1, #a855f7)' : 'transparent',
-                color: !isLogin ? 'white' : '#9ca3af',
-                border: !isLogin ? 'none' : '1px solid rgba(255,255,255,0.2)',
-              }}
+              onClick={() => { setIsLogin(false); setError(''); }}
+              className={`flex-1 py-2.5 rounded-xl font-bold transition-all text-sm ${
+                !isLogin 
+                ? 'bg-gradient-to-r from-indigo-primary to-neon-purple text-white shadow-glow-indigo' 
+                : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
+              }`}
             >
               Sign Up
             </button>
           </div>
 
           {error && (
-            <div style={{ marginBottom: '16px', padding: '12px', background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.5)', borderRadius: '8px', color: '#fca5a5', fontSize: '14px' }}>
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 dark:text-red-400 text-sm font-medium"
+            >
               {error}
-            </div>
+            </motion.div>
           )}
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#d1d5db' }}>Full Name</label>
+              <div>
+                <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300 px-1">Full Name</label>
                 <input
                   type="text"
                   required={!isLogin}
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Enter your full name"
-                  style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', padding: '12px 16px', color: 'white', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+                  placeholder="John Doe"
+                  className="w-full bg-gray-50 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-indigo-primary focus:ring-1 focus:ring-indigo-primary outline-none transition-all"
                 />
               </div>
             )}
 
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#d1d5db' }}>Email</label>
+            <div>
+              <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300 px-1">Email Address</label>
               <input
                 type="email"
                 required
                 autoComplete="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="Enter your email"
-                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', padding: '12px 16px', color: 'white', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+                placeholder="name@example.com"
+                className="w-full bg-gray-50 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-indigo-primary focus:ring-1 focus:ring-indigo-primary outline-none transition-all"
               />
             </div>
 
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#d1d5db' }}>Password</label>
+            <div>
+              <label className="block text-sm font-semibold mb-1.5 text-gray-700 dark:text-gray-300 px-1">Password</label>
               <input
                 type="password"
                 required
                 autoComplete={isLogin ? 'current-password' : 'new-password'}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="Enter your password (min 6 characters)"
+                placeholder="••••••••"
                 minLength={6}
-                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', padding: '12px 16px', color: 'white', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+                className="w-full bg-gray-50 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-indigo-primary focus:ring-1 focus:ring-indigo-primary outline-none transition-all"
               />
             </div>
 
             <motion.button
               type="submit"
               disabled={loading}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              style={{ width: '100%', padding: '12px', background: 'linear-gradient(to right, #6366f1, #a855f7)', border: 'none', borderRadius: '8px', color: 'white', fontWeight: '600', fontSize: '16px', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1 }}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              className="w-full py-3.5 mt-2 bg-gradient-to-r from-indigo-primary to-neon-purple text-white rounded-xl font-bold text-base shadow-glow-indigo hover:shadow-glow-cyan disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              {loading ? 'Please wait...' : isLogin ? 'Login' : 'Create Account'}
+              {loading ? 'Processing...' : isLogin ? 'Login to Account' : 'Get Started Now'}
             </motion.button>
 
-            <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: '14px', marginTop: '16px' }}>
-              {isLogin ? "Don't have an account? " : "Already have an account? "}
+            <p className="text-center text-gray-500 dark:text-gray-400 text-sm mt-4">
+              {isLogin ? "Don't have an account? " : "Already registered? "}
               <button
                 type="button"
-                onClick={() => { setIsLogin(!isLogin); setError(''); setFormData({ name: '', email: '', password: '' }); }}
-                style={{ color: '#22d3ee', background: 'none', border: 'none', cursor: 'pointer', fontWeight: '600' }}
+                onClick={() => { setIsLogin(!isLogin); setError(''); }}
+                className="text-indigo-primary dark:text-cyan-glow font-bold hover:underline"
               >
-                {isLogin ? 'Sign Up' : 'Login'}
+                {isLogin ? 'Create one' : 'Sign in'}
               </button>
             </p>
           </form>

@@ -16,20 +16,20 @@ const About = () => {
   ];
 
   return (
-    <div className="min-h-screen pt-20">
+    <div className="min-h-screen pt-20 bg-white dark:bg-deep-navy transition-colors duration-300">
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20">
+      <section className="container mx-auto px-4 py-12 md:py-20">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center max-w-3xl mx-auto mb-16"
         >
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">
             <span className="bg-gradient-to-r from-indigo-primary to-neon-purple bg-clip-text text-transparent">
               About Code Learn Hub
             </span>
           </h1>
-          <p className="text-xl text-gray-300">
+          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300">
             Empowering developers worldwide with AI-powered learning experiences
           </p>
         </motion.div>
@@ -37,37 +37,39 @@ const About = () => {
 
       {/* Mission */}
       <section className="container mx-auto px-4 py-12">
-        <motion.div
-          initial={{ opacity: 0, x: -50 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          className="glass rounded-custom p-8 mb-8"
-        >
-          <h2 className="text-3xl font-bold mb-4 text-cyan-glow">Our Mission</h2>
-          <p className="text-gray-300 text-lg leading-relaxed">
-            To democratize coding education by making high-quality, personalized learning accessible
-            to everyone. We believe that with the right tools and AI-powered guidance, anyone can
-            master programming and build amazing things.
-          </p>
-        </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="glass rounded-custom p-8 border border-black/5 dark:border-white/10 shadow-lg"
+          >
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-indigo-primary dark:text-cyan-glow">Our Mission</h2>
+            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+              To democratize coding education by making high-quality, personalized learning accessible
+              to everyone. We believe that with the right tools and AI-powered guidance, anyone can
+              master programming and build amazing things.
+            </p>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          className="glass rounded-custom p-8 mb-8"
-        >
-          <h2 className="text-3xl font-bold mb-4 text-cyan-glow">Our Vision</h2>
-          <p className="text-gray-300 text-lg leading-relaxed">
-            To become the world's leading AI-powered coding education platform, helping millions of
-            developers at every stage of their journey—from complete beginners to seasoned
-            professionals looking to upskill.
-          </p>
-        </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="glass rounded-custom p-8 border border-black/5 dark:border-white/10 shadow-lg"
+          >
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-indigo-primary dark:text-cyan-glow">Our Vision</h2>
+            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+              To become the world's leading AI-powered coding education platform, helping millions of
+              developers at every stage of their journey—from complete beginners to seasoned
+              professionals looking to upskill.
+            </p>
+          </motion.div>
+        </div>
       </section>
 
       {/* Why Platform */}
-      <section className="bg-dark-blue-gray/50 py-20">
+      <section className="bg-gray-50 dark:bg-dark-blue-gray/50 py-20 transition-colors duration-300 mt-12">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -75,7 +77,7 @@ const About = () => {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
               <span className="bg-gradient-to-r from-indigo-primary to-cyan-glow bg-clip-text text-transparent">
                 Why Code Learn Hub?
               </span>
@@ -107,11 +109,11 @@ const About = () => {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -10 }}
-                className="glass rounded-custom p-6 text-center border border-white/20 hover:border-cyan-glow transition-all"
+                className="glass rounded-custom p-6 text-center border border-black/5 dark:border-white/20 hover:border-cyan-glow transition-all shadow-md dark:shadow-none"
               >
                 <div className="text-5xl mb-4">{item.icon}</div>
-                <h3 className="text-xl font-bold mb-2 text-white">{item.title}</h3>
-                <p className="text-gray-400">{item.description}</p>
+                <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{item.title}</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">{item.description}</p>
               </motion.div>
             ))}
           </div>
@@ -124,16 +126,16 @@ const About = () => {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
+          className="text-center mb-16"
         >
-          <h2 className="text-4xl font-bold mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
             <span className="bg-gradient-to-r from-neon-purple to-cyan-glow bg-clip-text text-transparent">
               Our Roadmap
             </span>
           </h2>
         </motion.div>
 
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-4xl mx-auto space-y-8">
           {roadmap.map((item, index) => (
             <motion.div
               key={index}
@@ -141,27 +143,29 @@ const About = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="flex items-start mb-8"
+              className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-8"
             >
-              <div className="flex-shrink-0 w-32">
-                <div className={`px-4 py-2 rounded-custom font-semibold ${
+              <div className="flex-shrink-0 w-32 text-center md:text-right pt-2">
+                <div className={`inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-wider text-white ${
                   item.status === 'completed' ? 'bg-gradient-to-r from-indigo-primary to-cyan-glow' :
                   item.status === 'in-progress' ? 'bg-gradient-to-r from-neon-purple to-indigo-primary' :
-                  'bg-dark-blue-gray text-gray-400'
+                  'bg-gray-300 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                 }`}>
                   {item.year}
                 </div>
               </div>
-              <div className="ml-6 flex-1">
-                <div className="glass rounded-custom p-6 border border-white/20">
-                  <h3 className="text-xl font-bold mb-2 text-white">{item.milestone}</h3>
-                  <span className={`text-sm px-3 py-1 rounded-full ${
-                    item.status === 'completed' ? 'bg-cyan-glow/20 text-cyan-glow' :
-                    item.status === 'in-progress' ? 'bg-neon-purple/20 text-neon-purple' :
-                    'bg-gray-600 text-gray-400'
-                  }`}>
-                    {item.status.replace('-', ' ').toUpperCase()}
-                  </span>
+              <div className="flex-1 w-full">
+                <div className="glass rounded-2xl p-6 border border-black/5 dark:border-white/10 shadow-sm">
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">{item.milestone}</h3>
+                    <span className={`text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-widest ${
+                      item.status === 'completed' ? 'bg-green-100 dark:bg-cyan-glow/20 text-green-600 dark:text-cyan-glow' :
+                      item.status === 'in-progress' ? 'bg-purple-100 dark:bg-neon-purple/20 text-purple-600 dark:text-neon-purple' :
+                      'bg-gray-100 dark:bg-white/10 text-gray-400'
+                    }`}>
+                      {item.status.replace('-', ' ')}
+                    </span>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -169,8 +173,8 @@ const About = () => {
         </div>
       </section>
 
-      {/* Team */}
-      <section className="bg-dark-blue-gray/50 py-20">
+      {/* Team Section */}
+      <section className="bg-gray-50 dark:bg-dark-blue-gray/50 py-20 transition-colors duration-300">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -178,14 +182,14 @@ const About = () => {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
               <span className="bg-gradient-to-r from-indigo-primary to-neon-purple bg-clip-text text-transparent">
-                Our Team
+                Meet the Visionaries
               </span>
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {team.map((member, index) => (
               <motion.div
                 key={index}
@@ -194,11 +198,11 @@ const About = () => {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -10 }}
-                className="glass rounded-custom p-6 text-center border border-white/20 hover:border-cyan-glow transition-all"
+                className="glass rounded-2xl p-6 text-center border border-black/5 dark:border-white/10 shadow-sm hover:shadow-xl transition-all"
               >
-                <div className="text-6xl mb-4">{member.avatar}</div>
-                <h3 className="text-xl font-bold mb-2 text-white">{member.name}</h3>
-                <p className="text-cyan-glow">{member.role}</p>
+                <div className="text-5xl md:text-6xl mb-4 grayscale hover:grayscale-0 transition-all duration-500">{member.avatar}</div>
+                <h3 className="text-base md:text-lg font-bold mb-1 text-gray-900 dark:text-white truncate">{member.name}</h3>
+                <p className="text-xs md:text-sm text-indigo-primary dark:text-cyan-glow font-medium">{member.role}</p>
               </motion.div>
             ))}
           </div>
@@ -209,4 +213,3 @@ const About = () => {
 };
 
 export default About;
-

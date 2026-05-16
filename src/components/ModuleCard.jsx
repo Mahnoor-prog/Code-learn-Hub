@@ -7,13 +7,11 @@ const ModuleCard = ({ module, index }) => {
   const navigate = useNavigate();
 
   const handleYoutubeClick = () => {
-    // Generate a search query link based on the language and topic
     const searchQuery = encodeURIComponent(`${module.language} ${module.difficulty} tutorial for beginners`);
     window.open(`https://www.youtube.com/results?search_query=${searchQuery}`, '_blank');
   };
 
   const handleIDEClick = () => {
-    // Navigate to IDE, you can pass state if you want the IDE to pre-select language
     navigate('/ide', { state: { language: module.language.toLowerCase() } });
   };
 
@@ -24,8 +22,8 @@ const ModuleCard = ({ module, index }) => {
       viewport={{ once: true }}
       transition={{ delay: index * 0.1 }}
       whileHover={{ y: -10, scale: 1.02 }}
-      className="glass rounded-custom p-6 hover:border-cyan-glow border border-white/20 transition-all relative overflow-hidden flex flex-col justify-between"
-      style={{ minHeight: '300px' }}
+      className="glass rounded-custom p-6 hover:border-cyan-glow border border-black/5 dark:border-white/10 transition-all relative overflow-hidden flex flex-col justify-between shadow-sm dark:shadow-none"
+      style={{ minHeight: '320px' }}
     >
       <AnimatePresence mode="wait">
         {!showOptions ? (
@@ -39,19 +37,19 @@ const ModuleCard = ({ module, index }) => {
             <div>
               <div className="flex items-start justify-between mb-4">
                 <div className="text-5xl">{module.icon}</div>
-                <span className="px-3 py-1 bg-gradient-to-r from-indigo-primary to-neon-purple rounded-full text-xs font-semibold">
+                <span className="px-3 py-1 bg-gradient-to-r from-indigo-primary to-neon-purple rounded-full text-[10px] uppercase tracking-wider text-white font-bold">
                   {module.difficulty}
                 </span>
               </div>
-              <h3 className="text-xl font-bold mb-2 text-white">{module.title}</h3>
-              <p className="text-gray-400 text-sm mb-4">10 lessons</p>
+              <h3 className="text-xl font-bold mb-1 text-gray-900 dark:text-white leading-tight">{module.title}</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">10 structured lessons</p>
 
               <div className="mb-4">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-400">Progress</span>
-                  <span className="text-cyan-glow font-semibold">{module.progress || 0}%</span>
+                <div className="flex justify-between text-xs mb-2">
+                  <span className="text-gray-500 dark:text-gray-400">Progress</span>
+                  <span className="text-indigo-primary dark:text-cyan-glow font-bold">{module.progress || 0}%</span>
                 </div>
-                <div className="w-full bg-dark-blue-gray rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-gray-100 dark:bg-white/5 rounded-full h-2 overflow-hidden border border-black/5 dark:border-transparent">
                   <motion.div
                     initial={{ width: 0 }}
                     whileInView={{ width: `${module.progress || 0}%` }}
@@ -67,28 +65,28 @@ const ModuleCard = ({ module, index }) => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowOptions(true)}
-              className="w-full py-2 mt-auto bg-gradient-to-r from-indigo-primary to-neon-purple rounded-custom font-semibold hover:shadow-glow-purple transition-all"
+              className="w-full py-2.5 mt-auto bg-gradient-to-r from-indigo-primary to-neon-purple text-white rounded-xl font-semibold hover:shadow-glow-purple transition-all text-sm"
             >
-              {module.progress > 0 ? 'Continue' : 'Start'}
+              {module.progress > 0 ? 'Continue Path' : 'Begin Journey'}
             </motion.button>
           </motion.div>
         ) : (
           <motion.div
             key="back"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex flex-col h-full justify-center space-y-4"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="flex flex-col h-full justify-center space-y-3"
           >
-            <h3 className="text-xl font-bold text-center text-cyan-glow mb-2">Choose an Option</h3>
+            <h3 className="text-lg font-bold text-center text-indigo-primary dark:text-cyan-glow mb-2">Choose Activity</h3>
             
-            <Link to={`/modules/${module._id || module.id}/lessons`}>
+            <Link to={`/modules/${module._id || module.id}/lessons`} className="w-full">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg flex items-center justify-center gap-2 transition-all"
+                className="w-full py-2.5 bg-gray-50 dark:bg-white/10 hover:bg-gray-100 dark:hover:bg-white/20 border border-black/10 dark:border-white/20 rounded-xl flex items-center justify-center gap-2 transition-all text-sm font-medium text-gray-800 dark:text-white"
               >
-                <span>📚</span> Practice Lessons
+                <span>📚</span> Theory Lessons
               </motion.button>
             </Link>
 
@@ -96,27 +94,27 @@ const ModuleCard = ({ module, index }) => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleYoutubeClick}
-              className="w-full py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg flex items-center justify-center gap-2 transition-all"
+              className="w-full py-2.5 bg-gray-50 dark:bg-white/10 hover:bg-gray-100 dark:hover:bg-white/20 border border-black/10 dark:border-white/20 rounded-xl flex items-center justify-center gap-2 transition-all text-sm font-medium text-gray-800 dark:text-white"
             >
-              <span>🎥</span> YouTube Video
+              <span>🎥</span> Video Tutorials
             </motion.button>
 
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleIDEClick}
-              className="w-full py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg flex items-center justify-center gap-2 transition-all"
+              className="w-full py-2.5 bg-gray-50 dark:bg-white/10 hover:bg-gray-100 dark:hover:bg-white/20 border border-black/10 dark:border-white/20 rounded-xl flex items-center justify-center gap-2 transition-all text-sm font-medium text-gray-800 dark:text-white"
             >
-              <span>💻</span> Code Practice
+              <span>💻</span> Hands-on Practice
             </motion.button>
 
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowOptions(false)}
-              className="mt-4 text-gray-400 hover:text-white text-sm underline"
+              className="mt-2 text-gray-500 dark:text-gray-400 hover:text-indigo-primary dark:hover:text-white text-xs underline"
             >
-              Back
+              Return
             </motion.button>
           </motion.div>
         )}
@@ -126,4 +124,3 @@ const ModuleCard = ({ module, index }) => {
 };
 
 export default ModuleCard;
-

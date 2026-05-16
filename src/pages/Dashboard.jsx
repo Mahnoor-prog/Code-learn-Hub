@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -12,7 +12,7 @@ import { performanceAPI, weeklyReportsAPI } from '../utils/api';
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [stats, setStats] = useState({
     activeModules: 0,
     completed: 0,
@@ -63,7 +63,6 @@ const Dashboard = () => {
 
       const headers = { 'Authorization': `Bearer ${token}` };
 
-      // Multi-fetch the core features
       const [dashRes, activityRes] = await Promise.all([
         fetch(`${apiBaseUrl}/dashboard/me`, { headers }).catch(() => ({ ok: false })),
         fetch(`${apiBaseUrl}/activity/me`, { headers }).catch(() => ({ ok: false }))
@@ -81,13 +80,10 @@ const Dashboard = () => {
         totalPoints: dashboardData.totalPoints || 0
       });
 
-      // The chart will just show flat enrollment numbers over time or static placeholders based on prompt "Show progress bar for each module... Learning Progress section". 
-      // The prompt actually wants a list of active modules, not a generic line graph, but I'll pass enrolledModules to ProgressData safely.
       setProgressData(dashboardData.enrolledModules || []);
 
       if (activityRes.ok) {
         const actData = await activityRes.json();
-        // Map to standard layout expected
         const acts = actData.map(a => ({
           action: a.action,
           item: a.item,
@@ -119,7 +115,6 @@ const Dashboard = () => {
       setRoadmap(response.data);
       setCachedValue(`roadmap_${userKey}`, response.data);
     } catch {
-      // Keep dashboard resilient when roadmap isn't ready yet
     } finally {
       setRoadmapLoading(false);
     }
@@ -144,7 +139,6 @@ const Dashboard = () => {
       if (reportRes?.data) setWeeklyReport(reportRes.data);
       if (historyRes?.data) setWeeklyHistory(historyRes.data);
     } catch {
-      // silent failure to preserve old dashboard
     }
   };
 
@@ -156,48 +150,10 @@ const Dashboard = () => {
     { label: 'Settings', icon: '⚙️' },
   ];
 
-  // Set dynamic page title
   useEffect(() => {
     document.title = `Dashboard — Code Learn Hub`;
     return () => { document.title = 'Code Learn Hub'; };
   }, []);
-
-  if (authLoading || loading) {
-    return (
-      <div className="min-h-screen pt-20 px-6">
-        <div className="container mx-auto py-8">
-          {/* Skeleton header */}
-          <div className="animate-pulse mb-8">
-            <div className="h-10 w-72 bg-white/10 rounded-lg mb-3"></div>
-            <div className="h-5 w-48 bg-white/10 rounded"></div>
-          </div>
-          {/* Skeleton stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="glass rounded-custom p-6 border border-white/10 animate-pulse">
-                <div className="h-10 w-10 bg-white/10 rounded mb-4"></div>
-                <div className="h-8 w-16 bg-white/10 rounded mb-2"></div>
-                <div className="h-4 w-24 bg-white/10 rounded"></div>
-              </div>
-            ))}
-          </div>
-          {/* Skeleton cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="glass rounded-custom p-6 border border-white/10 animate-pulse">
-                <div className="h-6 w-40 bg-white/10 rounded mb-6"></div>
-                <div className="space-y-3">
-                  {[...Array(4)].map((_, j) => (
-                    <div key={j} className="h-4 bg-white/10 rounded" style={{ width: `${70 + j * 7}%` }}></div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const greetingPrefix = (() => {
     const hour = new Date().getHours();
@@ -224,18 +180,52 @@ const Dashboard = () => {
   const todayPlan = getTodayPlan();
   const lessonsCompletedThisWeek = weeklyReport?.totalLessonsCompleted || 0;
 
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen pt-20 px-6 bg-white dark:bg-deep-navy">
+        <div className="container mx-auto py-8">
+          <div className="animate-pulse mb-8">
+            <div className="h-10 w-72 bg-gray-200 dark:bg-white/10 rounded-lg mb-3"></div>
+            <div className="h-5 w-48 bg-gray-200 dark:bg-white/10 rounded"></div>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="glass rounded-custom p-6 border border-black/5 dark:border-white/10 animate-pulse">
+                <div className="h-10 w-10 bg-gray-200 dark:bg-white/10 rounded mb-4"></div>
+                <div className="h-8 w-16 bg-gray-200 dark:bg-white/10 rounded mb-2"></div>
+                <div className="h-4 w-24 bg-gray-200 dark:bg-white/10 rounded"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen pt-20 flex">
+    <div className="min-h-screen pt-20 flex bg-white dark:bg-deep-navy transition-colors duration-300">
+      {/* Sidebar Overlay for Mobile */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSidebarOpen(false)}
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
-      <motion.aside
-        initial={{ x: -300 }}
-        animate={{ x: sidebarOpen ? 0 : -300 }}
-        className={`fixed lg:static h-screen bg-dark-blue-gray border-r border-white/10 p-6 z-40 transition-all ${sidebarOpen ? 'w-64' : 'w-0 overflow-hidden'
-          }`}
+      <aside
+        className={`fixed top-20 left-0 h-[calc(100vh-80px)] bg-gray-50 dark:bg-dark-blue-gray border-r border-gray-200 dark:border-white/10 p-6 z-40 w-64 lg:static lg:translate-x-0 transition-all duration-300 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
       >
         <div className="mb-8">
           <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-primary to-neon-purple bg-clip-text text-transparent">
-            Dashboard
+            Navigation
           </h2>
         </div>
         <nav className="space-y-2">
@@ -249,10 +239,11 @@ const Dashboard = () => {
                 else if (item.label === 'Overview') navigate('/dashboard');
                 else if (item.label === 'Progress') document.getElementById('progress-section')?.scrollIntoView({ behavior: 'smooth' });
                 else alert('Feature coming soon!');
+                setSidebarOpen(false);
               }}
-              className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 transition-all ${item.active
-                ? 'bg-gradient-to-r from-indigo-primary to-neon-purple'
-                : 'hover:bg-white/5'
+              className={`w-full text-left px-4 py-3 rounded-xl flex items-center space-x-3 transition-all ${item.active
+                ? 'bg-gradient-to-r from-indigo-primary to-neon-purple text-white shadow-glow-indigo'
+                : 'text-gray-600 dark:text-gray-300 hover:bg-indigo-primary/10 dark:hover:bg-white/5'
                 }`}
             >
               <span className="text-xl">{item.icon}</span>
@@ -260,254 +251,156 @@ const Dashboard = () => {
             </motion.button>
           ))}
         </nav>
-      </motion.aside>
+      </aside>
 
       {/* Main Content */}
-      <div className="flex-1 ml-0 lg:ml-64">
-        <div className="container mx-auto px-4 py-8">
+      <div className="flex-1 w-full overflow-x-hidden">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">
+            <div className="flex-1">
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">
                 <span className="bg-gradient-to-r from-indigo-primary to-neon-purple bg-clip-text text-transparent">
                   Welcome Back{user?.name ? `, ${user.name}` : ''}!
                 </span>
               </h1>
-              <p className="text-gray-400">{greetingPrefix} {user?.name || 'Coder'}! Ready to code today? 🔥</p>
+              <p className="text-gray-600 dark:text-gray-400">{greetingPrefix} {user?.name || 'Coder'}! Ready to code today? 🔥</p>
             </div>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden p-3 glass rounded-lg border border-white/20"
+              className="lg:hidden p-3 glass rounded-xl border border-black/10 dark:border-white/20 text-indigo-primary dark:text-white"
             >
-              ☰
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" />
+              </svg>
             </motion.button>
           </div>
 
           {/* Personalized Roadmap */}
-          {roadmapLoading && (
-            <div className="glass rounded-custom p-6 border border-white/20 mb-8">
-              <div className="animate-pulse h-6 w-64 bg-white/10 rounded mb-4"></div>
-              <div className="animate-pulse h-4 w-full bg-white/10 rounded mb-3"></div>
-              <div className="animate-pulse h-4 w-4/5 bg-white/10 rounded"></div>
-            </div>
-          )}
           {!roadmapLoading && roadmap && (
-            <RoadmapTimeline
-              roadmap={roadmap}
-              onOpenModule={(moduleId) => navigate(`/modules/${moduleId}/lessons`)}
-            />
+            <div className="mb-8 overflow-hidden">
+              <RoadmapTimeline
+                roadmap={roadmap}
+                onOpenModule={(moduleId) => navigate(`/modules/${moduleId}/lessons`)}
+              />
+            </div>
           )}
 
           {/* Personalized Plan */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-custom p-6 border border-white/20 lg:col-span-2">
-              <h3 className="text-xl font-bold mb-4 text-white">Today's AI Recommended Plan</h3>
-              <div className="space-y-3 text-gray-300">
-                <p><span className="text-cyan-glow font-semibold">Next lesson:</span> {todayPlan.nextLesson}</p>
-                <p><span className="text-cyan-glow font-semibold">Daily challenge:</span> {todayPlan.challenge}</p>
-                <p><span className="text-cyan-glow font-semibold">Estimated time:</span> {todayPlan.estimatedTime}</p>
-                <p><span className="text-cyan-glow font-semibold">Predicted completion date:</span> {predictedCompletionDate}</p>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-custom p-6 border border-black/5 dark:border-white/10 lg:col-span-2">
+              <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Today's AI Recommended Plan</h3>
+              <div className="space-y-3 text-gray-700 dark:text-gray-300">
+                <p><span className="text-indigo-primary dark:text-cyan-glow font-semibold">Next lesson:</span> {todayPlan.nextLesson}</p>
+                <p><span className="text-indigo-primary dark:text-cyan-glow font-semibold">Daily challenge:</span> {todayPlan.challenge}</p>
+                <p><span className="text-indigo-primary dark:text-cyan-glow font-semibold">Estimated time:</span> {todayPlan.estimatedTime}</p>
+                <p><span className="text-indigo-primary dark:text-cyan-glow font-semibold">Predicted completion:</span> {predictedCompletionDate}</p>
               </div>
             </motion.div>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-custom p-6 border border-white/20">
-              <h3 className="text-xl font-bold mb-4 text-white">Performance Snapshot</h3>
-              <div className="space-y-3 text-gray-300">
-                <p><span className="text-cyan-glow font-semibold">Avg quiz score:</span> {performanceSummary.averageQuizScorePercentage}%</p>
-                <p><span className="text-cyan-glow font-semibold">Current streak:</span> {performanceSummary.currentStreak || stats.streak} days</p>
-                <p><span className="text-cyan-glow font-semibold">XP points:</span> {stats.totalPoints}</p>
-                <p><span className="text-cyan-glow font-semibold">Lessons this week:</span> {lessonsCompletedThisWeek}</p>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Weekly AI report */}
-          {weeklyReport && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-custom p-6 border border-white/20 mb-8">
-              <h3 className="text-2xl font-bold text-white mb-4">Weekly AI Progress Report</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-300">
-                <p><span className="text-cyan-glow font-semibold">Strongest topic:</span> {weeklyReport.strongestTopic}</p>
-                <p><span className="text-cyan-glow font-semibold">Weakest topic:</span> {weeklyReport.weakestTopic}</p>
-                <p><span className="text-cyan-glow font-semibold">Average this week:</span> {weeklyReport.averageQuizScore}%</p>
-                <p><span className="text-cyan-glow font-semibold">Focus next week:</span> {weeklyReport.recommendedFocus}</p>
-              </div>
-              <div className="mt-4 p-4 bg-dark-blue-gray rounded-lg border border-white/10 text-gray-200">
-                {weeklyReport.motivationalMessage}
-              </div>
-              {weeklyHistory.length > 1 && (
-                <div className="mt-4 text-sm text-gray-400">
-                  Previous reports saved: {Math.max(weeklyHistory.length - 1, 0)}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-custom p-6 border border-black/5 dark:border-white/10">
+              <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Snapshot</h3>
+              <div className="space-y-3 text-gray-700 dark:text-gray-300">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Avg quiz score</span>
+                  <span className="text-indigo-primary dark:text-cyan-glow font-bold">{performanceSummary.averageQuizScorePercentage}%</span>
                 </div>
-              )}
-            </motion.div>
-          )}
-
-          {/* Weak and strong areas */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="glass rounded-custom p-6 border border-white/20">
-              <h3 className="text-xl font-bold mb-4 text-white">Weak Areas</h3>
-              <div className="space-y-2">
-                {performanceSummary.weakAreas.length ? performanceSummary.weakAreas.slice(0, 6).map((topic, idx) => (
-                  <div key={`${topic}-${idx}`} className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-400/20 text-red-200">{topic}</div>
-                )) : <div className="text-gray-400">No weak areas detected yet.</div>}
-              </div>
-            </motion.div>
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="glass rounded-custom p-6 border border-white/20">
-              <h3 className="text-xl font-bold mb-4 text-white">Strong Areas</h3>
-              <div className="space-y-2">
-                {performanceSummary.strongAreas.length ? performanceSummary.strongAreas.slice(0, 6).map((topic, idx) => (
-                  <div key={`${topic}-${idx}`} className="px-3 py-2 rounded-lg bg-green-500/10 border border-green-400/20 text-green-200">{topic}</div>
-                )) : <div className="text-gray-400">Strong areas will appear after quiz completions.</div>}
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Streak</span>
+                  <span className="text-indigo-primary dark:text-cyan-glow font-bold">{performanceSummary.currentStreak || stats.streak} days</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">XP points</span>
+                  <span className="text-indigo-primary dark:text-cyan-glow font-bold">{stats.totalPoints.toLocaleString()}</span>
+                </div>
               </div>
             </motion.div>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
               whileHover={{ y: -5 }}
-              className="glass rounded-custom p-6 border border-white/20 bg-gradient-to-br from-indigo-primary to-neon-purple bg-opacity-10"
+              className="glass rounded-custom p-4 md:p-6 border border-black/5 dark:border-white/10 bg-indigo-primary/5 dark:bg-indigo-primary/10"
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-4xl">📚</div>
-              </div>
-              <div className="text-3xl font-bold mb-1 text-white">{stats.activeModules}</div>
-              <div className="text-gray-400 text-sm">Active Modules</div>
+              <div className="text-3xl mb-2">📚</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.activeModules}</div>
+              <div className="text-gray-500 dark:text-gray-400 text-xs md:text-sm">Active</div>
             </motion.div>
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
               whileHover={{ y: -5 }}
-              className="glass rounded-custom p-6 border border-white/20 bg-gradient-to-br from-cyan-glow to-indigo-primary bg-opacity-10"
+              className="glass rounded-custom p-4 md:p-6 border border-black/5 dark:border-white/10 bg-cyan-500/5 dark:bg-cyan-500/10"
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-4xl">✅</div>
-              </div>
-              <div className="text-3xl font-bold mb-1 text-white">{stats.completed}</div>
-              <div className="text-gray-400 text-sm">Completed</div>
+              <div className="text-3xl mb-2">✅</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.completed}</div>
+              <div className="text-gray-500 dark:text-gray-400 text-xs md:text-sm">Done</div>
             </motion.div>
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
               whileHover={{ y: -5 }}
-              className="glass rounded-custom p-6 border border-white/20 bg-gradient-to-br from-neon-purple to-cyan-glow bg-opacity-10"
+              className="glass rounded-custom p-4 md:p-6 border border-black/5 dark:border-white/10 bg-purple-500/5 dark:bg-purple-500/10"
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-4xl">🔥</div>
-              </div>
-              <div className="text-3xl font-bold mb-1 text-white">{stats.streak} days</div>
-              <div className="text-gray-400 text-sm">Streak</div>
+              <div className="text-3xl mb-2">🔥</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.streak}</div>
+              <div className="text-gray-500 dark:text-gray-400 text-xs md:text-sm">Streak</div>
             </motion.div>
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
               whileHover={{ y: -5 }}
-              className="glass rounded-custom p-6 border border-white/20 bg-gradient-to-br from-indigo-primary to-cyan-glow bg-opacity-10"
+              className="glass rounded-custom p-4 md:p-6 border border-black/5 dark:border-white/10 bg-orange-500/5 dark:bg-orange-500/10"
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-4xl">⭐</div>
-              </div>
-              <div className="text-3xl font-bold mb-1 text-white">{stats.totalPoints.toLocaleString()}</div>
-              <div className="text-gray-400 text-sm">Total Points</div>
+              <div className="text-3xl mb-2">⭐</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalPoints}</div>
+              <div className="text-gray-500 dark:text-gray-400 text-xs md:text-sm">XP</div>
             </motion.div>
           </div>
 
           {/* Charts and Activity */}
-          <div id="progress-section" className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* Learning Progress Cards */}
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="glass rounded-custom p-6 border border-white/20 overflow-y-auto"
-              style={{ maxHeight: '400px' }}
-            >
-              <h3 className="text-xl font-bold mb-6 text-white flex items-center"><span className="mr-2">📈</span> Learning Progress</h3>
+          <div id="progress-section" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Progress */}
+            <motion.div className="glass rounded-custom p-6 border border-black/5 dark:border-white/10">
+              <h3 className="text-xl font-bold mb-6 text-gray-900 dark:text-white flex items-center">
+                <span className="mr-2">📈</span> Learning Progress
+              </h3>
               <div className="space-y-6">
                 {progressData.length > 0 ? progressData.map((mod, i) => (
                   <div key={i}>
                     <div className="flex justify-between text-sm mb-2">
-                      <span className="font-semibold text-white">{mod.title}</span>
-                      <span className="text-cyan-glow font-bold">{mod.completeCount} / {mod.totalLessons} ({mod.percent}%)</span>
+                      <span className="font-semibold text-gray-700 dark:text-white truncate pr-4">{mod.title}</span>
+                      <span className="text-indigo-primary dark:text-cyan-glow font-bold shrink-0">{mod.percent}%</span>
                     </div>
-                    <div className="w-full bg-dark-blue-gray rounded-full h-2 overflow-hidden border border-white/5">
+                    <div className="w-full bg-gray-200 dark:bg-white/5 rounded-full h-2 overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${mod.percent}%` }}
                         transition={{ duration: 1 }}
-                        className="h-full bg-gradient-to-r from-neon-purple to-cyan-glow"
+                        className="h-full bg-gradient-to-r from-indigo-primary to-cyan-glow"
                       />
                     </div>
                   </div>
                 )) : (
-                  <div className="text-gray-400 text-sm">No active modules found. Head to Modules to start learning!</div>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">No active modules yet.</p>
                 )}
               </div>
             </motion.div>
 
-            {/* Recent Activity */}
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="glass rounded-custom p-6 border border-white/20"
-            >
-              <h3 className="text-xl font-bold mb-6 text-white">Recent Activity</h3>
+            {/* Activity */}
+            <motion.div className="glass rounded-custom p-6 border border-black/5 dark:border-white/10">
+              <h3 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">Recent Activity</h3>
               <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-start space-x-4 p-4 bg-dark-blue-gray rounded-lg hover:bg-white/5 transition-all"
-                  >
+                {recentActivity.slice(0, 5).map((activity, index) => (
+                  <div key={index} className="flex items-start space-x-4 p-3 bg-gray-50 dark:bg-white/5 rounded-xl border border-black/5 dark:border-transparent">
                     <div className="text-2xl">{activity.icon}</div>
-                    <div className="flex-1">
-                      <p className="text-white font-semibold">
-                        {activity.action} <span className="text-cyan-glow">{activity.item}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-gray-900 dark:text-white font-semibold text-sm truncate">
+                        {activity.action} <span className="text-indigo-primary dark:text-cyan-glow">{activity.item}</span>
                       </p>
-                      <p className="text-gray-400 text-sm">{activity.time}</p>
+                      <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">{activity.time}</p>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </motion.div>
           </div>
-
-          {/* Learning Summary — live data */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="glass rounded-custom p-8 border border-white/20"
-          >
-            <h3 className="text-2xl font-bold mb-6 text-white">Learning Summary</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-cyan-glow mb-2">
-                  {performanceSummary.averageQuizScorePercentage}%
-                </div>
-                <div className="text-gray-400">Average Quiz Score</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-cyan-glow mb-2">
-                  {performanceSummary.totalTimeSpentSeconds > 0
-                    ? `${Math.round(performanceSummary.totalTimeSpentSeconds / 3600 * 10) / 10}h`
-                    : '0h'}
-                </div>
-                <div className="text-gray-400">Total Study Time</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-cyan-glow mb-2">{stats.activeModules}</div>
-                <div className="text-gray-400">Active Modules</div>
-              </div>
-            </div>
-          </motion.div>
         </div>
       </div>
     </div>
@@ -515,4 +408,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

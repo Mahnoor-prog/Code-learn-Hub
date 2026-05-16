@@ -4,7 +4,10 @@ import Module from '../../models/Module.js';
 let openaiClient;
 const getOpenAI = () => {
   if (!openaiClient) {
-    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    openaiClient = new OpenAI({ 
+        apiKey: process.env.GITHUB_AI_TOKEN || process.env.GROK_API_KEY || process.env.OPENAI_API_KEY,
+        baseURL: process.env.GITHUB_AI_ENDPOINT || (process.env.GROK_API_KEY ? "https://api.x.ai/v1" : undefined)
+    });
   }
   return openaiClient;
 };
@@ -106,7 +109,7 @@ Rules: include 4-6 steps ordered by priority; align with user goal and experienc
 
   try {
     const completion = await getOpenAI().chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: process.env.GITHUB_AI_MODEL || (process.env.GROK_API_KEY ? "grok-beta" : "gpt-4o-mini"),
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 1800,
       temperature: 0.7

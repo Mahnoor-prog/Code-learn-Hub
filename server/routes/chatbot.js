@@ -72,10 +72,11 @@ router.post('/message', authenticate, async (req, res) => {
 
     // Call OpenAI API
     const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
+      apiKey: process.env.GITHUB_AI_TOKEN || process.env.GROK_API_KEY || process.env.OPENAI_API_KEY,
+      baseURL: process.env.GITHUB_AI_ENDPOINT || (process.env.GROK_API_KEY ? "https://api.x.ai/v1" : undefined)
     });
     const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: process.env.GITHUB_AI_MODEL || (process.env.GROK_API_KEY ? "grok-beta" : "gpt-4o-mini"),
       messages: [
         {
           role: 'system',
@@ -129,7 +130,7 @@ router.get('/analyze-performance', authenticate, async (req, res) => {
     const profile = await UserLearningProfile.findOne({ userId: req.userId });
     const perf = await buildPerformanceSnapshot(req.userId);
 
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const openai = new OpenAI({ apiKey: process.env.GITHUB_AI_TOKEN || process.env.GROK_API_KEY || process.env.OPENAI_API_KEY, baseURL: process.env.GITHUB_AI_ENDPOINT || (process.env.GROK_API_KEY ? "https://api.x.ai/v1" : undefined) });
     const prompt = `Analyze student performance and provide concise guidance.
 User: ${user?.name || 'Student'}
 Goal: ${profile?.goal || 'Learn for Fun'}
@@ -144,7 +145,7 @@ Return plain text with:
 3) a motivational closing line`;
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: process.env.GITHUB_AI_MODEL || (process.env.GROK_API_KEY ? "grok-beta" : "gpt-4o-mini"),
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 500,
       temperature: 0.7

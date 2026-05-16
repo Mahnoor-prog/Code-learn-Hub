@@ -4,7 +4,10 @@ dotenv.config({ path: './server/.env' });
 
 let _openai;
 const getOpenAI = () => {
-    if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "missing-api-key" });
+    if (!_openai) _openai = new OpenAI({ 
+        apiKey: process.env.GITHUB_AI_TOKEN || process.env.GROK_API_KEY || process.env.OPENAI_API_KEY || "missing-api-key",
+        baseURL: process.env.GITHUB_AI_ENDPOINT || (process.env.GROK_API_KEY ? "https://api.x.ai/v1" : undefined)
+    });
     return _openai;
 };
 
@@ -20,7 +23,7 @@ export const generateLessonContent = async (topic, language, level) => {
     Format the output in clean, readable Markdown. Do not include introductory text like "Here is the lesson", just the Markdown content.`;
 
     const response = await getOpenAI().chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: process.env.GITHUB_AI_MODEL || (process.env.GROK_API_KEY ? "grok-beta" : "gpt-4o-mini"),
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
     });
@@ -57,7 +60,7 @@ export const generateQuizAndExercises = async (topic, language, level) => {
     - Validate that the JSON is properly escaped and formatted without any markdown wrappers (like \`\`\`json). Just return the raw JSON string.`;
 
     const response = await getOpenAI().chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: process.env.GITHUB_AI_MODEL || (process.env.GROK_API_KEY ? "grok-beta" : "gpt-4o-mini"),
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
     });
@@ -95,7 +98,7 @@ export const explainError = async (code, language, errorMessage) => {
     Do not include markdown wrappers around the JSON.`;
 
     const response = await getOpenAI().chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: process.env.GITHUB_AI_MODEL || (process.env.GROK_API_KEY ? "grok-beta" : "gpt-4o-mini"),
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
     });
@@ -126,7 +129,7 @@ export const generateNextLessonRecommendation = async (progressData) => {
     No markdown formatting around the JSON.`;
 
     const response = await getOpenAI().chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: process.env.GITHUB_AI_MODEL || (process.env.GROK_API_KEY ? "grok-beta" : "gpt-4o-mini"),
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
     });
@@ -150,7 +153,7 @@ export const generateProgressCoachMessage = async (stats) => {
     Mention their streak or earned badges if applicable. Keep it brief, fun, and use an emoji!`;
 
     const response = await getOpenAI().chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: process.env.GITHUB_AI_MODEL || (process.env.GROK_API_KEY ? "grok-beta" : "gpt-4o-mini"),
         messages: [{ role: "user", content: prompt }],
         temperature: 0.8,
     });
