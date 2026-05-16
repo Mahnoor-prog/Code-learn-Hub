@@ -8,35 +8,41 @@ router.post('/run', authenticate, async (req, res) => {
     try {
         const { language, code } = req.body;
 
-        // Map frontend language names to our new local execution server aliases
+        // Map frontend language names to Piston language names
         const languageMap = {
             'Python': 'python',
             'JavaScript': 'javascript',
             'C++': 'cpp',
-            'Java': 'java', // Note: Java isn't supported by the new backend yet, will return unsupported error
+            'Java': 'java',
             'C#': 'csharp',
-            'React': 'react'
+            'React': 'javascript' // Map React to JS for basic execution (JSX won't compile without Babel on Piston)
         };
 
         const executionLang = languageMap[language] || language.toLowerCase();
 
-        // Call our new custom execution server instead of Piston
-        const response = await axios.post('http://127.0.0.1:3000/execute', {
+        // Call the free public Piston API
+        const response = await axios.post('https://emkc.org/api/v2/piston/execute', {
             language: executionLang,
-            code: code
+            version: '*', // Use latest available version
+            files: [
+                {
+                    content: code
+                }
+            ]
         });
 
-        // Our server returns { stdout, stderr, exitCode }
-        // The frontend IDE.jsx expects { output, error }
+        // Piston v2 returns results in response.data.run
+        const runResult = response.data.run || {};
+
         res.json({
-            output: response.data.stdout || '',
-            error: response.data.stderr || '',
-            details: response.data
+            output: runResult.stdout || '',
+            error: runResult.stderr || '',
+            details: runResult
         });
 
     } catch (err) {
         console.error('Code execution error:', err.message);
-        const errorMsg = err.response?.data?.error || err.message;
+        const errorMsg = err.response?.data?.message || err.message;
         res.status(500).json({ error: 'Failed to execute code on sandbox server: ' + errorMsg });
     }
 });

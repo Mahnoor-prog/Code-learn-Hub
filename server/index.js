@@ -156,22 +156,20 @@ app.use((req, res) => {
   });
 });
 
-// Start server with error handling
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📡 API endpoints available at http://localhost:${PORT}/api`);
-}).on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`❌ Port ${PORT} is already in use!`);
-    console.log(`\n💡 Solutions:`);
-    console.log(`   1. Stop the other process using port ${PORT}`);
-    console.log(`   2. Change PORT in .env file to a different port (e.g., 5001)`);
-    console.log(`   3. Find and kill the process: netstat -ano | findstr :${PORT}`);
-    console.log(`\n   To kill process on Windows:`);
-    console.log(`   taskkill /PID <process_id> /F`);
-  } else {
-    console.error(`❌ Server error:`, err.message);
-  }
-  process.exit(1);
-});
+// Start server locally (Vercel uses the exported app instead)
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📡 API endpoints available at http://localhost:${PORT}/api`);
+  }).on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`❌ Port ${PORT} is already in use!`);
+    } else {
+      console.error(`❌ Server error:`, err.message);
+    }
+    process.exit(1);
+  });
+}
+
+export default app;
 
